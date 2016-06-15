@@ -465,7 +465,7 @@ class OpticalModeling(object):
         thickness     : d   = self.t[matind] 
         complex dielectric constants:  self.nk[mat]
         
-        return L, a num[y array with shape len(self.WL)x2x2 array
+        return L, a numpy array with shape len(self.WL)x2x2 array
         L[i] is the propogation matrix at wavelength self.WL[i]
         
         L[i] = [ [ exp(-x*d),        0 ]
