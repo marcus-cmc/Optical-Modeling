@@ -44,8 +44,8 @@ plotWL = [450, 600, 700, 950] # selective wavelengths for "E vs position"
 plotE = True   # plot E-field vs wavelength
 plotAbs = True # plot absorption vs wavelength
 plotGen = True # plot generation rate and spectral absorption rate
-saveDataE, saveDataAbs, saveDataGen = False, True, False
-saveFigE , saveFigAbs , saveFigGen  = False, True, False
+saveDataE, saveDataAbs, saveDataGen = False, False, False
+saveFigE , saveFigAbs , saveFigGen  = False, False, False
 SaveName = "Result"
 
 posstep = 1.0 # step size for thickness
