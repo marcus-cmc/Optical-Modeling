@@ -7,7 +7,8 @@ Created on Thu Sep 24 12:40:50 2015
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
- 
+plt.style.use('ggplot')
+
 
 #------------------------------ User input --------------------------------
 

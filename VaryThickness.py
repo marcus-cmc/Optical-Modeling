@@ -10,8 +10,9 @@ import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import pandas as pd
 from TransferMatrix import OpticalModeling as TM
-import time
-from scipy import signal
+#import time
+#from scipy import signal
+plt.style.use('ggplot')
 
 # Device: (Name, thciness) ; thickness in nm 
 # Names of layers of materials must match that in the library
@@ -51,7 +52,7 @@ Device = [
 VaryOneLayer = True # vary the thickness of one layer or two layers(False)
 ToVary = 3 # the layer to vary
 #t_range = np.arange(100, 601, 10) # start, end (not included), step
-t_range = np.arange(50, 501, 25)
+t_range = np.arange(50, 501, 50)
 #t_range = [ 50,75,125,150,250,300,350] # manually input range
 
 # target: layer of interest (layer index), usually the light absorber. 
@@ -64,8 +65,8 @@ target = 3
 ##############  vary the thickness of two layers     ##############
 VaryTwoLayer = not VaryOneLayer # vary the thickness of two layers
 
-ToVary2= 3
-t2_range = np.arange(100, 1001, 10)
+ToVary2= 2
+t2_range = np.arange(20, 201, 10)
 target2 = None # for tandem only, calculate and plot the Jsc of the tandem
                # cell with absorber target1 and target 2 (min of these)
                # i.e. the current limiting case. Use None for non-tandem device
@@ -131,7 +132,7 @@ class VaryThickness(TM):
             self.varyT.append(self.Transmission)
             self.varyR.append(self.Reflection)
             if toPrint:
-                print self.layers[L_vary], "=", ti, "nm,"
+                print "calculating: ", self.layers[L_vary], "=", ti, "nm,"
                 #print self.layers[L_vary], "=", ti, "nm,", "Max Jsc in", 
                 #print self.layers[target], "=", np.round(self.Jsc[target-1],2)
         if PlotJsc and not isinstance(target, str):
@@ -147,12 +148,12 @@ class VaryThickness(TM):
         axJsc = figJsc.add_subplot(111)
         xlabel = 'Thickness of ' + self.layers[self.L_vary] + ' (nm)'
         ylabel = 'Jsc' + " (mA/cm$^2$)"
-        axJsc.set_xlabel(xlabel, size=16, weight='bold')
-        axJsc.set_ylabel(ylabel, size=16, weight='bold')
+        axJsc.set_xlabel(xlabel, size=16)
+        axJsc.set_ylabel(ylabel, size=16)
         axJsc.plot(self.t_range, [Jsc[target-1] for Jsc in self.varyJsc], 
                    '-o', linewidth=2, color='r', markersize=8)
         axJsc.tick_params(labelsize=14)
-        figJsc.suptitle(ftitle, fontsize=14, fontweight='bold')
+        figJsc.suptitle(ftitle, fontsize=14)
         return None
         
     def PlotVaryAbs(self, target, cbarlegend=False):
@@ -193,7 +194,7 @@ class VaryThickness(TM):
                            linewidth=2, label = str(t) + " nm",
                            color=cmap(normalize(t)))
         else:
-#            ftitle = 'Modeled Absorption in '+self.layers[target]
+            #ftitle = 'Modeled Absorption in '+self.layers[target]
             ftitle = 'Absorption in L'+str(target)+' '+self.layers[target]
             targethead = self.Absorption.columns[target-1] 
             axAbs.set_ylabel('Modeled Absorption (%)', size=24)
@@ -204,7 +205,7 @@ class VaryThickness(TM):
                            color=cmap(normalize(t)))
                        
         axAbs.tick_params(labelsize=18)
-        figAbs.suptitle(ftitle, fontsize=14, fontweight='bold')
+        figAbs.suptitle(ftitle, fontsize=14)
         
         # use normal legend
         if num_color <= 20 and not cbarlegend: 
@@ -266,8 +267,8 @@ class VaryThickness(TM):
         axV2  = figV2.add_subplot(111)
         xlabel = 'Thickness of L' + str(self.L1)+ ' ' + self.layers[self.L1]
         ylabel = 'Thickness of L' + str(self.L2)+ ' ' + self.layers[self.L2]
-        axV2.set_xlabel(xlabel + ' (nm)', size=14, weight='bold')
-        axV2.set_ylabel(ylabel + ' (nm)', size=14, weight='bold')
+        axV2.set_xlabel(xlabel + ' (nm)', size=14)
+        axV2.set_ylabel(ylabel + ' (nm)', size=14)
         X, Y = np.meshgrid(self.t1range, self.t2range)
 
         v2J1 = self.v2Jsc.take(target1-1, axis=2)
@@ -294,7 +295,7 @@ class VaryThickness(TM):
             CS = axV2.contourf(X, Y, J, 100)
         axV2.tick_params(labelsize=14)
         figV2.colorbar(CS)
-        figV2.suptitle(V2title, fontsize=14, fontweight='bold')       
+        figV2.suptitle(V2title, fontsize=14)       
         
         return None
 
