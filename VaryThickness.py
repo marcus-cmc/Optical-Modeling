@@ -10,9 +10,9 @@ import matplotlib.colors as mcolors
 import matplotlib.cm as cm
 import pandas as pd
 from TransferMatrix import OpticalModeling as TM
-#import time
-#from scipy import signal
+
 plt.style.use('ggplot')
+
 
 # Device: (Name, thciness) ; thickness in nm 
 # Names of layers of materials must match that in the library
@@ -52,7 +52,7 @@ Device = [
 VaryOneLayer = True # vary the thickness of one layer or two layers(False)
 ToVary = 3 # the layer to vary
 #t_range = np.arange(100, 601, 10) # start, end (not included), step
-t_range = np.arange(50, 501, 50)
+t_range = np.arange(50, 801, 25)
 #t_range = [ 50,75,125,150,250,300,350] # manually input range
 
 # target: layer of interest (layer index), usually the light absorber. 
@@ -66,7 +66,7 @@ target = 3
 VaryTwoLayer = not VaryOneLayer # vary the thickness of two layers
 
 ToVary2= 2
-t2_range = np.arange(20, 201, 10)
+t2_range = np.arange(50, 201, 50)
 target2 = None # for tandem only, calculate and plot the Jsc of the tandem
                # cell with absorber target1 and target 2 (min of these)
                # i.e. the current limiting case. Use None for non-tandem device
@@ -100,7 +100,10 @@ class VaryThickness(TM):
         self.t_cumsum = np.cumsum(self.t)
         self.x_pos = np.arange(self.WLstep/2.0, sum(self.t) , self.posstep)
         self.x_ind = self.x_indice()
+        self.Lmats[layerind] = self.L_mat(layerind)
+
         return None
+
 
     def VaryOne(self, L_vary, t_range, target, toPrint=False, 
                 PlotJsc=True, PlotAbs=True, cbarlegend=False):
@@ -139,7 +142,9 @@ class VaryThickness(TM):
             self.PlotVaryJsc(target)
         if PlotAbs:
             self.PlotVaryAbs(target, cbarlegend)
+
         return None
+
 
     def PlotVaryJsc(self, target):
         ftitle = 'Max Jsc in L' + str(target) + ' ' + self.layers[target]
@@ -154,8 +159,10 @@ class VaryThickness(TM):
                    '-o', linewidth=2, color='r', markersize=8)
         axJsc.tick_params(labelsize=14)
         figJsc.suptitle(ftitle, fontsize=14)
+
         return None
-        
+
+
     def PlotVaryAbs(self, target, cbarlegend=False):
 
         #figAbs = plt.figure('absorption', figsize=(16*0.8, 9*0.8))
@@ -258,7 +265,9 @@ class VaryThickness(TM):
         self.v2Jsc = np.array(v2Jsc)
         if toPlot:
             self.PlotTwo(target1, target2, interp_countour)
+
         return None
+
 
     def PlotTwo(self, target1, target2=None, interp_contour=False):
         
@@ -299,6 +308,7 @@ class VaryThickness(TM):
         
         return None
 
+
 ## To do:
     def SaveVary(SaveName):
         return 
@@ -317,5 +327,3 @@ if __name__=="__main__":
                    L2=ToVary2, t2_range = t2_range, 
                    target1 = target, target2=target2, toPlot=True,
                    print1=True, print2=False, interp_countour=interp_countour)
-                   
-
