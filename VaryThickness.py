@@ -11,10 +11,11 @@ import matplotlib.cm as cm
 import pandas as pd
 from TransferMatrix import OpticalModeling as TM
 
+
 plt.style.use('ggplot')
 
 
-# Device: (Name, thciness) ; thickness in nm 
+# Device: (Name, thciness) ; thickness in nm
 # Names of layers of materials must match that in the library
 # ex: layer name: Glass ; library should contains Glass_n & Glass_k
 # starting from the side where light is incident from
@@ -25,37 +26,34 @@ plt.style.use('ggplot')
 
 #------------------------------ User input --------------------------------
 #Device = [
-#          ("Glass"  , 500), # layer 0
-#          ("ITO"    , 145), # layer 1
-#          ("ZnO"    ,  70), # layer 2
-#          ("PbSTBAI", 300), 
-#          ("PbSEDT" ,  45),
-#          ("Au"     , 150),
-##          ("ZnO"    ,  70),
-##          ("PbSTBAI", 200),
-##          ("PbSEDT" ,  45),
-##          ("Au"     , 150)
+#          ("Glass", 500), # layer 0
+#          ("ITO"  , 145), # layer 1
+#          ("ZnO"  ,  70), # layer 2
+#          ("PbS"  , 200),
+#          ("Au"   ,   2),
+#          ("ZnO"  ,  70),
+#          ("PbS"  , 400),
+#          ("Au"   , 150)
 #         ]
 
 
 Device = [
-          ("Glass"  , 500), # layer 0
-          ("ITO"    , 145), # layer 1
-          ("ZnO"    , 120), # layer 2
-          ("PbSTBAI", 220),
-          ("PbSEDT" , 45),
-          ("Au"     , 150)
+          ("Glass",   0), # layer 0
+          ("ITO"  , 145), # layer 1
+          ("ZnO"  , 120), # layer 2
+          ("PbS"  , 250),
+          ("Au"   , 100)
          ]
 
 
 ##############  vary the thickness of one layer     ##############
-VaryOneLayer = True # vary the thickness of one layer or two layers(False)
-ToVary = 3 # the layer to vary
+VaryOneLayer = False # vary the thickness of one layer or two layers(False)
+ToVary = 2 # the layer to vary
 #t_range = np.arange(100, 601, 10) # start, end (not included), step
-t_range = np.arange(50, 801, 25)
+t_range = np.arange(10, 501, 10)
 #t_range = [ 50,75,125,150,250,300,350] # manually input range
 
-# target: layer of interest (layer index), usually the light absorber. 
+# target: layer of interest (layer index), usually the light absorber.
 # Will calculate the max Jsc in this layer (assuming 100% IQE)
 # alternatively, can use 'R' for reflection or 'T' for transmission
 target = 3
@@ -65,8 +63,8 @@ target = 3
 ##############  vary the thickness of two layers     ##############
 VaryTwoLayer = not VaryOneLayer # vary the thickness of two layers
 
-ToVary2= 2
-t2_range = np.arange(50, 201, 50)
+ToVary2 = 1
+t2_range = np.arange(10, 201, 10)
 target2 = None # for tandem only, calculate and plot the Jsc of the tandem
                # cell with absorber target1 and target 2 (min of these)
                # i.e. the current limiting case. Use None for non-tandem device
@@ -77,8 +75,8 @@ libname = "Index_of_Refraction_library.csv"
 Solarfile = "SolarAM15.csv" # Wavelength vs  mW*cm-2*nm-1
 
 posstep = 1.0 # thickness step size
-wavelength = (300, 1200) # wavelength range (nm)
-WLstep = 1.0 # wavelength step size (nm)
+wavelength = (350, 1200) # wavelength range (nm)
+WLstep = 2.0 # wavelength step size (nm)
 
 SaveName = "Result"
 
@@ -87,9 +85,18 @@ cbarlegend = True # colorbar as legend for the "thickness vs Abs" plot
 
 interp_countour = True # True : Contour plot (interplate data)
                         # False: Heatmap (no interp)
+#########################################################################
+
+
 # ----------------------------END of user input---------------------------
 
 class VaryThickness(TM):
+
+    def __init__(self, *args, **kwargs):
+        TM.__init__(self, *args, **kwargs)
+        self.S_prime = {}
+        self.S_dprime = {}
+
 
     def set_t_update(self, layerind, newthickness):
         """
@@ -105,11 +112,28 @@ class VaryThickness(TM):
         return None
 
 
-    def VaryOne(self, L_vary, t_range, target, toPrint=False, 
+
+    def RunSim(self, plotE=True, plotAbs=True, plotGen=True,
+                     saveFigE=False, saveFigAbs=False, saveFigGen=False):
+        self.Cal_Imat_Lmats()
+        S = self.CalS(L_vary = self.L_vary)
+        self.CalE(S, self.S_prime, self.S_dprime)
+        self.CalAbs()
+        self.CalGen()
+        if plotE:
+            self.PlotE(savefig=saveFigE)
+        if plotAbs:
+            self.PlotAbs(savefig=saveFigAbs)
+        if plotGen:
+            self.PlotGen(savefig=saveFigGen)
+        return None
+
+
+    def VaryOne(self, L_vary, t_range, target, toPrint=False,
                 PlotJsc=True, PlotAbs=True, cbarlegend=False):
         """
-        vary the thickness of the layer with index L_vary and then run optical 
-        modeling. 
+        vary the thickness of the layer with index L_vary and then run optical
+        modeling.
         L_vary: index of the layer to vary
         t_range: thickness to vary, an iterable
         self.varyJsc: a list of "Jsc in each layer" w.r.t the varying thickness
@@ -126,7 +150,7 @@ class VaryThickness(TM):
             target = int(target) # in case user input is a float
         else:
             target = target.upper() # in case user input is a lowercase letter
-            
+
         for ti in t_range:
             self.set_t_update(L_vary, ti) # update t & related variables
             self.RunSim(plotE=False, plotAbs=False, plotGen=False)
@@ -136,7 +160,7 @@ class VaryThickness(TM):
             self.varyR.append(self.Reflection)
             if toPrint:
                 print "calculating: ", self.layers[L_vary], "=", ti, "nm,"
-                #print self.layers[L_vary], "=", ti, "nm,", "Max Jsc in", 
+                #print self.layers[L_vary], "=", ti, "nm,", "Max Jsc in",
                 #print self.layers[target], "=", np.round(self.Jsc[target-1],2)
         if PlotJsc and not isinstance(target, str):
             self.PlotVaryJsc(target)
@@ -155,10 +179,10 @@ class VaryThickness(TM):
         ylabel = 'Jsc' + " (mA/cm$^2$)"
         axJsc.set_xlabel(xlabel, size=16)
         axJsc.set_ylabel(ylabel, size=16)
-        axJsc.plot(self.t_range, [Jsc[target-1] for Jsc in self.varyJsc], 
+        axJsc.plot(self.t_range, [Jsc[target-1] for Jsc in self.varyJsc],
                    '-o', linewidth=2, color='r', markersize=8)
         axJsc.tick_params(labelsize=14)
-        figJsc.suptitle(ftitle, fontsize=14)
+        figJsc.tight_layout()
 
         return None
 
@@ -169,59 +193,55 @@ class VaryThickness(TM):
         figAbs = plt.figure(figsize=(16*0.8, 9*0.8))
         figAbs.clf()
         axAbs = figAbs.add_subplot(111)
-        axAbs.set_xlabel('Wavelength (nm)', size=24)
-        
+        axAbs.set_xlabel('Wavelength (nm)', size=22)
+
         cmap = plt.get_cmap('rainbow')
         num_color = len(self.t_range)
         vmin, vmax = t_range[0], t_range[-1]
         normalize = mcolors.Normalize(vmin, vmax)
 
         if target=='R':
-            ftitle = 'Reflection'
-            axAbs.set_ylabel('Reflection (%)', size=24)
+            axAbs.set_ylabel('Reflection (%)', size=22)
             for ind, t in enumerate(self.t_range):
-                axAbs.plot(self.WL, 100.0*self.varyR[ind], 
+                axAbs.plot(self.WL, 100.0*self.varyR[ind],
                            linewidth=2, label = str(t) + " nm",
                            color=cmap(normalize(t)))
 
         elif target=='A':
-            ftitle = '1-R-T'
-            axAbs.set_ylabel('1-R-T (%)', size=24)
+            axAbs.set_ylabel('Absorption (1-R-T) (%)', size=22)
             for ind, t in enumerate(self.t_range):
-                axAbs.plot(self.WL, 100.0*(1-self.varyR[ind]-self.varyT[ind]), 
+                axAbs.plot(self.WL, 100.0*(1-self.varyR[ind]-self.varyT[ind]),
                            linewidth=2, label = str(t) + " nm",
                            color=cmap(normalize(t)))
 
-            
+
         elif target=='T':
-            ftitle = 'Transmission'
-            axAbs.set_ylabel('Transmission (%)', size=24)  
+            axAbs.set_ylabel('Transmission (%)', size=22)
             for ind, t in enumerate(self.t_range):
-                axAbs.plot(self.WL, 100.0*self.varyT[ind], 
+                axAbs.plot(self.WL, 100.0*self.varyT[ind],
                            linewidth=2, label = str(t) + " nm",
                            color=cmap(normalize(t)))
         else:
-            #ftitle = 'Modeled Absorption in '+self.layers[target]
-            ftitle = 'Absorption in L'+str(target)+' '+self.layers[target]
-            targethead = self.Absorption.columns[target-1] 
-            axAbs.set_ylabel('Modeled Absorption (%)', size=24)
-        
+            targethead = self.Absorption.columns[target-1]
+            axAbs.set_ylabel('Modeled Absorption (%)', size=22)
+
             for ind, t in enumerate(self.t_range):
-                axAbs.plot(self.WL, 100.0*self.varyAbs[ind][targethead], 
+                axAbs.plot(self.WL, 100.0*self.varyAbs[ind][targethead],
                            linewidth=2, label = str(t) + " nm",
                            color=cmap(normalize(t)))
-                       
+
         axAbs.tick_params(labelsize=18)
-        figAbs.suptitle(ftitle, fontsize=14)
-        
         # use normal legend
-        if num_color <= 20 and not cbarlegend: 
-            axAbs.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), 
+        if num_color <= 20 and not cbarlegend:
+            axAbs.legend(loc='center left', bbox_to_anchor=(1.02, 0.5),
                          numpoints=1, fontsize=14,
                          title='Thickness of\n ' + self.layers[self.L_vary],
                          borderaxespad=0).draggable()
+            plt.tight_layout()
+
             figAbs.subplots_adjust(right=0.82)
-        # use colorbar legend when specified or >20 lines 
+
+        # use colorbar legend when specified or >20 lines
         else:
             scalarmappaple = cm.ScalarMappable(norm=normalize, cmap=cmap)
             scalarmappaple.set_array(t_range)
@@ -231,15 +251,17 @@ class VaryThickness(TM):
 
             cblegend.set_label(cblabel, fontsize=14, labelpad=16)
             cblegend.ax.tick_params(labelsize=14)
+            plt.tight_layout()
+
 
         return None
 
 
-    def VaryTwo(self, L1, t1_range, L2, t2_range, target1, target2=None, 
-                toPlot=True, print1=False, print2=False, 
+    def VaryTwo(self, L1, t1_range, L2, t2_range, target1, target2=None,
+                toPlot=True, print1=False, print2=False,
                 interp_countour=False):
         """
-        vary the thickness of the two layers L1 and L2. 
+        vary the thickness of the two layers L1 and L2.
         L1, L2: indice of the layers to vary
         t1_range, t2_range: thickness to vary, an iterable
         target1: the layer used to calculate Jsc (@100%IQE)
@@ -248,7 +270,7 @@ class VaryThickness(TM):
                  i.e. the current limiting Jsc.
                  Default is None (single junction cells)
         The result will be stored in self.v2Jsc, a 3-D np array
-        
+
         return None
         """
         v2Jsc=[]
@@ -256,6 +278,7 @@ class VaryThickness(TM):
         self.L2, self.t2range = L2, t2_range
         for t1 in self.t1range:
             self.set_t_update(self.L1, t1)
+            self.S_prime, self.S_dprime = {}, {}
             if print1:
                 print "Calculating: ", self.layers[L1], "=", t1, "nm,",
                 print "Varying ", self.layers[L2]
@@ -270,8 +293,22 @@ class VaryThickness(TM):
 
 
     def PlotTwo(self, target1, target2=None, interp_contour=False):
-        
-        figV2 = plt.figure()
+
+        if target2!=None: # for tandem
+            p, q = len(self.t1range), len(self.t2range)
+            Jsc = self.v2Jsc
+            J = np.array([[min(Jsc[i][j][target1-1], Jsc[i][j][target2-1])
+                           for i in xrange(p)] for j in xrange(q)])
+
+            V2title=("Max Jsc in the device\n (min of L{0} {1} and L{2} {3})"
+                     ).format(target1, self.layers[target1],
+                              target2, self.layers[target2])
+        else:
+            J =  self.v2Jsc.take(target1-1, axis=2).T
+            V2title='Max Jsc in L{0} {1}'.format(target1, self.layers[target1])
+
+
+        figV2 = plt.figure(V2title)
         figV2.clf()
         axV2  = figV2.add_subplot(111)
         xlabel = 'Thickness of L' + str(self.L1)+ ' ' + self.layers[self.L1]
@@ -280,23 +317,10 @@ class VaryThickness(TM):
         axV2.set_ylabel(ylabel + ' (nm)', size=14)
         X, Y = np.meshgrid(self.t1range, self.t2range)
 
-        v2J1 = self.v2Jsc.take(target1-1, axis=2)
-        if target2!=None: # for tandem
-            v2J2 = self.v2Jsc.take(target2-1, axis=2)
-            p, q = v2J1.shape[0], v2J1.shape[1]
-            J = np.array([ [min(v2J1[i][j], v2J2[i][j]) for j in range(q)] 
-                               for i in range(p)])
-            V2title = ('Max Jsc in the device\n' +
-                       '(min of L'+ str(target1) + ' ' + self.layers[target1]+
-                       ' and ' +
-                       'L'+ str(target2) + ' ' + self.layers[target1] +")" )
-        else:
-            J = v2J1.T
-            V2title = ('Max Jsc in L' + str(target1) + 
-                        ' ' + self.layers[target1])                          
+
         ## heat map, no interpolation
         if not interp_contour:
-            CS=axV2.pcolormesh(X, Y, J)
+            CS = axV2.pcolormesh(X, Y, J)
             axV2.set_xlim(self.t1range[0], self.t1range[-1])
             axV2.set_ylim(self.t2range[0], self.t2range[-1])
         else: ## contourf, interpolate data
@@ -304,26 +328,73 @@ class VaryThickness(TM):
             CS = axV2.contourf(X, Y, J, 100)
         axV2.tick_params(labelsize=14)
         figV2.colorbar(CS)
-        figV2.suptitle(V2title, fontsize=14)       
-        
+        figV2.tight_layout()
+
         return None
+
+    def CalS(self, L_vary = 0):
+        '''
+        calculate S, S_prime, and S_dprime
+        S = S' * L  * S"   for any j
+             j    j    j
+
+                        i = j-1
+           S'[j]  = [  product  ( I      * L    )  ]   * I
+          (j>0)         i = 0      i,i+1    i+1           j, j+1
+
+        '''
+
+        j = L_vary
+        Imats, Lmats = self.Imats, self.Lmats
+        nWL = len(self.WL)
+        S_prime, S_dprime = self.S_prime, self.S_dprime
+
+        layers = self.layers + ["Air"]
+
+        # calculate S_prime and S
+
+        if j in S_prime:
+            S = np.copy(S_prime[j])
+        else:
+            S = np.array([np.eye(2, dtype=complex) for _ in xrange(nWL)])
+            j = 0
+        for matind in xrange(j+1, len(layers)):
+            pre, mater =  layers[matind-1], layers[matind]
+            for i in xrange(nWL):
+                S[i] = S[i].dot(Lmats[matind-1][i])
+                S[i] = S[i].dot(Imats[(pre, mater)][i])
+            S_prime[matind] = np.copy(S)
+
+        S_dprime[len(layers)-2] = Imats[(layers[-2], layers[-1])]
+
+        endind = len(layers)-3 if j==0 else j-1
+        for matind in xrange(endind, 0, -1):
+
+            mater, nex =  layers[matind], layers[matind+1]
+            tmp = np.copy(S_dprime[matind+1])
+            for i in xrange(nWL):
+                tmp[i] = np.dot(Lmats[matind+1][i], tmp[i])
+                tmp[i] = np.dot(Imats[(mater, nex)][i], tmp[i])
+            S_dprime[matind] = tmp
+
+        return S
+
 
 
 ## To do:
     def SaveVary(SaveName):
-        return 
+        return
 
 
 if __name__=="__main__":
-
     VT = VaryThickness(Device, libname=libname, wavelength=wavelength,
                        WLstep = WLstep, posstep = posstep,
                        Solarfile = Solarfile)
     if VaryOneLayer:
-        VT.VaryOne(ToVary, t_range, target, toPrint=True,cbarlegend=cbarlegend)
-
+        VT.VaryOne(ToVary, t_range, target, toPrint=False,cbarlegend=cbarlegend)
     if VaryTwoLayer:
-        VT.VaryTwo(L1=ToVary, t1_range = t_range, 
-                   L2=ToVary2, t2_range = t2_range, 
+        VT.VaryTwo(L1=ToVary, t1_range = t_range,
+                   L2=ToVary2, t2_range = t2_range,
                    target1 = target, target2=target2, toPlot=True,
                    print1=True, print2=False, interp_countour=interp_countour)
+

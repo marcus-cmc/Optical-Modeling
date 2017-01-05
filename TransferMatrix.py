@@ -13,29 +13,28 @@ plt.style.use('ggplot')
 #------------------------------ User input --------------------------------
 
 
-# Device: (Name, thciness) ; thickness in nm 
+# Device: (Name, thciness) ; thickness in nm
 # Names of layers of materials must match that in the library
-# For example, if the layer is called "Glass", 
+# For example, if the layer is called "Glass",
 # the library should contain a columns called "Glass_n" and "Glass_k"
 # starting from the side where light is incident from
-# The first layer is assumed to be a thick substrate whose thickness is 
+# The first layer is assumed to be a thick substrate whose thickness is
 # irrelivant. If a thin substrate is used, add "Air" as the first layer
 
 # ----- Mandatary input ------
 Device = [
-          ("Glass"  , 1000), 
-          ("ITO"    , 145), 
-          ("ZnO"    , 120), 
-          ("PbSTBAI", 220), 
-          ("PbSEDT" ,  0),
+          ("Glass"  , 100),
+          ("ITO"    , 145),
+          ("ZnO"    , 120),
+          ("PbS",     200),
           ("Au"     , 150)
          ]
 
 libname = "Index_of_Refraction_library.csv"
 Solarfile = "SolarAM15.csv" # Wavelength vs  mW*cm-2*nm-1
 
-wavelength = (300, 1200) # wavelength range (nm) to model
-plotWL = [450, 600, 700, 950] # selective wavelengths for "E vs position" 
+wavelength = (350, 1200) # wavelength range (nm) to model
+plotWL = [450, 600, 700, 950] # selective wavelengths for "E vs position"
 
 
 # ----- Optional Input -----
@@ -48,7 +47,7 @@ saveFigE , saveFigAbs , saveFigGen  = False, False, False
 SaveName = "Result"
 
 posstep = 1.0 # step size for thickness
-WLstep = 1.0 # wavelength step size (nm)
+WLstep = 2.0 # wavelength step size (nm)
 
 # ---------------------------- End of  user input ----------------------------
 
@@ -58,10 +57,10 @@ c = 2.998e8   # m/s speed of light
 q = 1.602e-19 # C electric charge
 
 class OpticalModeling(object):
-    def __init__(self, Device=Device, libname=libname, wavelength=wavelength, 
+    def __init__(self, Device=Device, libname=libname, wavelength=wavelength,
                  WLstep  = 2.0, posstep = 0.5, Solarfile = "SolarAM15.csv"):
         # layer (materials)
-        self.layers = [Device[0][0]] + [mat[0] for mat in Device[1:] 
+        self.layers = [Device[0][0]] + [mat[0] for mat in Device[1:]
                        if float(mat[1]) > 0]
         # thickness; set the thickness of the substrate (first layer) to 0
         self.t = [0] + [mat[1] for mat in Device[1:] if float(mat[1]) > 0]
@@ -77,22 +76,25 @@ class OpticalModeling(object):
         self.x_ind = self.x_indice()
         self.AM15 = self.LoadSolar(Solarfile) # load/reshape into desired WL range
         self.nk = self.Load_nk(libname)
-        
+
         self.E = None
         self.Reflection = None
         self.Transmission = None
         self.AbsRate = None
         self.Absorption = None
         self.Gx = None
-        self.Jsc = None   
+        self.Jsc = None
 
         self.Imats = {} # for calculating transfer matrix
         self.Lmats = {} # for calculating transfer matrix
 
 
+
     def RunSim(self, plotE=True, plotAbs=True, plotGen=True,
                      saveFigE=False, saveFigAbs=False, saveFigGen=False):
-        self.CalE()
+        self.Cal_Imat_Lmats()
+        S, Sp, Sdp = self.CalS()
+        self.CalE(S, Sp, Sdp)
         self.CalAbs()
         self.CalGen()
         if plotE:
@@ -110,7 +112,7 @@ class OpticalModeling(object):
         if saveDataE:
             df_E = pd.DataFrame(abs(self.E**2))
             df_E.index = self.x_pos
-            df_E.to_csv(savename+"_E.csv", header=self.WL) 
+            df_E.to_csv(savename+"_E.csv", header=self.WL)
         if saveDataGen:
             df_Gen = pd.DataFrame(self.Gx)
             df_Gen.index = self.x_pos
@@ -123,10 +125,10 @@ class OpticalModeling(object):
             df_Abs.to_csv(savename+"_Absorption.csv")
 
         return None
-        
-        
+
+
     def LoadSolar(self, Solarfile):
-        Solar = pd.read_csv(Solarfile, header = 0) 
+        Solar = pd.read_csv(Solarfile, header = 0)
         AM15 = np.interp(self.WL, Solar.iloc[:,0], Solar.iloc[:,1])
         return AM15 # mW/cm2 nm
 
@@ -134,19 +136,19 @@ class OpticalModeling(object):
     def Load_nk(self, libname):
         # load data
         data=pd.read_csv(libname, header = 0)
-        # Initialize a dict d_nk  (key, val) = (mater: complex nk) 
+        # Initialize a dict d_nk  (key, val) = (mater: complex nk)
         # key is the name of the material, val is the complex value of nk
         # (indexing in np array is faster than pandas dataframe)
         d_nk ={}
         d_nk["WL"] = self.WL
-        d_nk["Air"] = np.array([1]*len(self.WL)) 
-        # interp n,k to desired WL range and store them in nk 
+        d_nk["Air"] = np.array([1]*len(self.WL))
+        # interp n,k to desired WL range and store them in nk
         for mater in self.layers:
             if mater not in d_nk:
                 n=np.interp(self.WL, data["Wavelength (nm)"], data[mater+"_n"])
                 k=np.interp(self.WL, data["Wavelength (nm)"], data[mater+"_k"])
                 #d_nk[mater] = n + 1j*k
-                d_nk[mater] = np.array([complex(n[i],k[i]) 
+                d_nk[mater] = np.array([complex(n[i],k[i])
                                         for i in xrange(len(self.WL))])
         return d_nk
 
@@ -154,9 +156,9 @@ class OpticalModeling(object):
     def x_indice(self):
         """
         return a list of indice "x_ind" for use in x_pos
-        material i corresponds to the indices range  
+        material i corresponds to the indices range
         [x_ind[i-1], xind[i]) in x_pos
-        Note: the first layer is glass and is excluded in x_pos 
+        Note: the first layer is glass and is excluded in x_pos
         """
         x_ind = [len(self.x_pos) for _ in xrange(len(self.t)) ]
         j = 0
@@ -164,98 +166,102 @@ class OpticalModeling(object):
             if x > self.t_cumsum[j]:
                 x_ind[j] = i
                 j += 1
-        return x_ind         
-        
-        
-    def CalE(self):
+        return x_ind
+
+
+
+    def CalE(self, S, S_prime, S_dprime):
         # Calculate Incoherent power transmission through substrate
         # T = |4*n1*n2 / (n1+n2)^2| , R = |((n1-n2)/(n1+n2))^2|
-        T_glass = abs(4*1*self.nk[self.layers[0]] / 
-                      (1+self.nk[self.layers[0]])**2 )
-        R_glass = abs(((1-self.nk[self.layers[0]])/
-                      (1+self.nk[self.layers[0]]))**2 )
-        
+        subnk = self.nk[self.layers[0]]
+
+        T_glass = abs(4*1*subnk / (1+subnk)**2 )
+        R_glass = abs( ( (1-subnk)/(1+subnk) )**2 )
+
         # Calculate transfer matrices and field at each wavelength and position
         self.E = np.zeros([len(self.x_pos), len(self.WL)], dtype=complex)
-        R = self.WL*0.0
-        T = self.WL*0.0
+
+        R = (abs(S[:,1,0]/S[:,0,0]))**2
+        T = abs(2.0/(1 + self.nk[self.layers[0]])) / (1-R_glass*R )**0.5
+
+        layers = self.layers + ['Air']
+        for matind in xrange(1, len(layers)-1): # last one is 'air', ignore
+            mater = layers[matind]
+            for i, w in enumerate(self.WL):
+                xi = 2.0*np.pi*self.nk[mater][i] / w
+                dj = self.t[matind]
+
+                # x: distance from previous layer
+                x = (self.x_pos[self.x_ind[matind-1]:self.x_ind[matind]] -
+                     self.t_cumsum[matind-1] )
+
+                Sp, Sdp = S_prime[matind][i], S_dprime[matind][i]
+
+                numerator = (Sdp[0,0] * np.exp(complex(0,-1.0)*xi*(dj-x))+
+                             Sdp[1,0] * np.exp(complex(0, 1.0)*xi*(dj-x)))
+
+                denom = (Sp[0,0] * Sdp[0,0]*np.exp(complex(0,-1.0)*xi*dj) +
+                         Sp[0,1] * Sdp[1,0]*np.exp(complex(0, 1.0)*xi*dj) )
+
+                l, r = self.x_ind[matind-1], self.x_ind[matind]
+                self.E[l:r, i] = T[i]*numerator/denom
+
+        self.Reflection = R_glass + T_glass**2*R / (1-R_glass*R)
+
+        return None
+
+    def Cal_Imat_Lmats(self):
         Imats, Lmats = self.Imats, self.Lmats
-        
-        for matind in xrange(len(self.layers)-1):
-            mater, nex = self.layers[matind], self.layers[matind+1]
+        layers = self.layers + ["Air"]
+        # precalculate all the required Imat and Lmat
+        for matind in xrange(len(layers)-1):
+            mater, nex = layers[matind], layers[matind+1]
             if matind not in Lmats:
                 Lmats[matind] = self.L_mat(matind)
             if (mater, nex) not in Imats:
                 Imats[(mater, nex)] = self.I_mat(mater, nex)
-        if (nex, "Air") not in Imats:
-            Imats[(nex, "Air")] =  self.I_mat(nex, "Air")
-        if len(self.layers)-1 not in Lmats:
-            Lmats[len(self.layers)-1] = self.L_mat(len(self.layers)-1)
-        
-        for i, w in enumerate(self.WL):
-            # Calculate transfer matrices for incoherent reflection and 
-            # transmission at the first interface
-            S = Imats[(self.layers[0], self.layers[1])][i]
-            for L in xrange(1, len(self.layers)-1):
-                mater, nex = self.layers[L], self.layers[L+1] 
-                S = S.dot(Lmats[L][i])
-                S = S.dot(Imats[(mater, nex)][i])
+        return
 
-            S = S.dot(Lmats[len(self.layers)-1][i])
-            S = S.dot(Imats[(nex,'Air')][i])
+    def CalS(self):
+        '''
+        calculate S, S_prime, and S_dprime
+        S = S' * L  * S"   for any j
+             j    j    j
 
-            # JAP Vol 86 p.487 Eq 9 
-            # Power Reflection from layers other than substrate
-            R[i] = (abs(S[1,0]/S[0,0]))**2 
-            
-            #Transmission of field through glass substrate 
-            #Griffiths 9.85 + multiple reflection geometric series
-            T[i] = ( abs(2.0/(1 + self.nk[self.layers[0]][i])) / 
-                    (1-R_glass[i]*R[i] )**0.5  )
+                        i = j-1
+           S'[j]  = [  product  ( I      * L    )  ]   * I
+          (j>0)         i = 0      i,i+1    i+1           j, j+1
 
+        '''
 
-            # Calculate all other transfer matrices
-            for L in xrange(1, len(self.layers)):
-                mater = self.layers[L]
-                xi = 2.0*np.pi*self.nk[mater][i] / w
-                dj = self.t[L]
-                # x: distance from previous layer
-                x = (self.x_pos[self.x_ind[L-1]:self.x_ind[L]] - 
-                     self.t_cumsum[L-1] ) 
-        
-                # Calculate S matrices (JAP Vol 86 p.487 Eq 12 and 13)
-                S_prime = Imats[(self.layers[0], self.layers[1])][i]
-                for matind in xrange(2, L+1):
-                    mater, pre = self.layers[matind], self.layers[matind-1]
-                    S_prime = S_prime.dot(Lmats[matind-1][i])
-                    S_prime = S_prime.dot(Imats[(pre, mater)][i])
+        Imats, Lmats = self.Imats, self.Lmats
+        nWL = len(self.WL)
+        S_prime, S_dprime = {}, {}
 
-                S_dprime = np.eye(2, dtype=complex)                 
+        layers = self.layers + ["Air"]
 
-                for matind in xrange(L, len(self.layers)):
-                    if matind < len(self.layers)-1:
-                        mater, nex = self.layers[matind], self.layers[matind+1]
-                        S_dprime = S_dprime.dot(Imats[(mater, nex)][i])
-                        S_dprime = S_dprime.dot(Lmats[matind+1][i])
-                    else:
-                        mater, nex = self.layers[matind], "Air"
-                        S_dprime = S_dprime.dot(Imats[(mater, nex)][i])
-                        
-                # Normalized Field profile (JAP Vol 86 p.487 Eq 22)
-                numerator = (S_dprime[0,0] * np.exp(complex(0,-1.0)*xi*(dj-x))+
-                             S_dprime[1,0] * np.exp(complex(0, 1.0)*xi*(dj-x)))                   
-                denom = (S_prime[0,0]*S_dprime[0,0]*
-                         np.exp(complex(0,-1.0)*xi*dj) ) 
-                denom += (S_prime[0,1] * S_dprime[1,0]* 
-                          np.exp(complex(0, 1.0)*xi*dj) ) 
-                        
-                self.E[self.x_ind[L-1]:self.x_ind[L], i]=T[i]*numerator/denom        
-        
-        # Overall Reflection from device with incoherent reflections 
-        # at first interface
-        self.Reflection = R_glass + T_glass**2*R / (1-R_glass*R)
-        
-        return None
+        # calculate S_prime and S
+
+        S = np.array([np.eye(2, dtype=complex) for _ in xrange(nWL)])
+        for matind in xrange(1, len(layers)):
+            pre, mater =  layers[matind-1], layers[matind]
+            for i in xrange(nWL):
+                S[i] = S[i].dot(Lmats[matind-1][i])
+                S[i] = S[i].dot(Imats[(pre, mater)][i])
+            S_prime[matind] = np.copy(S)
+
+        S_dprime[len(layers)-2] = Imats[(layers[-2], layers[-1])]
+
+        for matind in xrange(len(layers)-3, 0, -1):
+            mater, nex =  layers[matind], layers[matind+1]
+            tmp = np.copy(S_dprime[matind+1])
+            for i in xrange(nWL):
+                tmp[i] = np.dot(Lmats[matind+1][i], tmp[i])
+                tmp[i] = np.dot(Imats[(mater, nex)][i], tmp[i])
+            S_dprime[matind] = tmp
+
+        return S, S_prime, S_dprime
+
 
 
     def CalAbs(self):
@@ -268,9 +274,9 @@ class OpticalModeling(object):
         for mater in self.layers[1:]:
             if mater not in a:
                 a[mater] = 4*np.pi*self.nk[mater].imag/(self.WL*1e-7)
-                
+
         # initialize Absrate with E^2, multiply nk later
-        self.AbsRate = abs(self.E)**2 
+        self.AbsRate = abs(self.E)**2
         self.Absorption = pd.DataFrame() # initialize Absorption (% of light)
         for matind in xrange(1, len(self.t)):
             mater = self.layers[matind]
@@ -279,45 +285,47 @@ class OpticalModeling(object):
             self.AbsRate[posind[0]:posind[1]]*=a[mater]*np.real(self.nk[mater])
             self.Absorption[mlabel] = (np.sum(self.AbsRate[
                                               posind[0]:posind[1]],0)
-                                       * self.posstep * 1e-7 )        
-        self.Transmission = 1 - np.sum(self.Absorption,1) - self.Reflection
+                                       * self.posstep * 1e-7 )
+        self.Transmission = 1.0 - np.sum(self.Absorption,1) - self.Reflection
 
         return None
 
 
     def CalGen(self):
         """
-        Calculate generation rate as a function of position in the device 
+        Calculate generation rate as a function of position in the device
         and calculates Jsc (in mA/cm^2)
-        """    
-        # Energy dissipation mW/cm3-nm at each position and wavelength 
-        # (JAP Vol 86 p.487 Eq 22)  
+        """
+        # Energy dissipation mW/cm3-nm at each position and wavelength
+        # (JAP Vol 86 p.487 Eq 22)
         if self.AbsRate is None:
             self.CalAbs()
         Q = self.AbsRate * self.AM15
         self.Gx = Q*1e-12/(h*c)*self.WL
-    
-        Gx_x = [np.sum(self.Gx[self.x_ind[i-1]:self.x_ind[i]]) 
+
+        Gx_x = [np.sum(self.Gx[self.x_ind[i-1]:self.x_ind[i]])
                 for i in xrange(1,len(self.layers))]
         self.Jsc = np.array(Gx_x) * self.WLstep * self.posstep * q * 1e-4
-        
+
         return None
-        
-        
+
+
     def PlotE(self, plotWL=plotWL, savename=SaveName+"_Efiled", savefig=False):
         """
         Plots electric field intensity |E|^2 vs position in device for
-        wavelengths specified in the initial array, plotWavelengths. 
+        wavelengths specified in the initial array, plotWavelengths.
         """
         # E-field, selected wavelength
-        fig1 = plt.figure(1)
+
+        fig1 = plt.figure("E field for selected WL")
+
+        #fig1 = plt.figure(1)
         plt.clf()
         ax1 = fig1.add_subplot(111)
-         
         ax1.set_ylabel('Normalized |E|$^2$Intensity', size=20)
         ax1.set_xlabel('Position in Device (nm)', size=20)
         ax1.tick_params(labelsize=18)
-     
+
         E2 = abs(self.E**2)
         for i, w in enumerate(plotWL):
             label = "%s nm" % w
@@ -327,7 +335,7 @@ class OpticalModeling(object):
             #E2 = abs(E[:, xind])**2
             ax1.plot(self.x_pos, E2[:,xind], label=label, linewidth=2)
         ax1.set_ylim(ymin=0)
-         
+
         # E-field, contour
         fig2 = plt.figure("E-filed")
         plt.clf()
@@ -341,102 +349,112 @@ class OpticalModeling(object):
             c.set_edgecolor("face")
         ax2.tick_params(labelsize=18)
         fig2.colorbar(CS)
-        fig2.suptitle('Normalized E-field Intensity', 
-                       fontsize=20)
-    
+        #fig2.suptitle('Normalized E-field Intensity',
+        #               fontsize=20)
+
         # layer bar
         for matind in xrange(2, len(self.layers)+1):
             ax1.axvline(self.t_cumsum[matind-1], color="black")
             ax2.axvline(self.t_cumsum[matind-1], color="black")
             x_text = (self.t_cumsum[matind-2] + self.t_cumsum[matind-1])/2.0
-            ax1.text(x_text, ax1.get_ylim()[1]+0.01, self.layers[matind-1], 
+            ax1.text(x_text, ax1.get_ylim()[1]+0.01, self.layers[matind-1],
                      size=16, va="bottom", ha="center")
-            ax2.text(x_text, ax2.get_ylim()[1]+0.01, self.layers[matind-1], 
-                     size=14, va="bottom", ha="center")                 
+            ax2.text(x_text, ax2.get_ylim()[1]+0.01, self.layers[matind-1],
+                     size=14, va="bottom", ha="center")
         ax1.set_xlim(0, max(self.x_pos))
         ax1.legend(loc='upper right', fontsize=18).draggable()
-        #plt.tight_layout()
+
+        fig1.tight_layout()
+        fig2.tight_layout()
+
         if savefig:
             fig1.savefig(savename+"_selectedWL.pdf", transparent=True)
-            fig2.savefig(savename+".pdf", transparent=True)    
-            
+            fig2.savefig(savename+".pdf", transparent=True)
+
         return None
- 
-        
+
+
     def PlotAbs(self, savename=SaveName+"_Absorption", savefig=False):
         """
         Plots normalized intensity absorbed /cm3-nm at each position and
         wavelength as well as the reflection expected from the device
         """
-        
+
         fig3 = plt.figure("Absorption")
         plt.clf()
         ax3  = fig3.add_subplot(111)
         ax3.set_ylabel('Fraction of Light', size=20)
         ax3.set_xlabel('Wavelength (nm)', size=20)
         ax3.tick_params(labelsize=18)
-        
+
         for matind in xrange(1, len(self.t)):
             mater = self.layers[matind]
             mlabel = "L" + str(matind) + "_" + mater
-            ax3.plot(self.WL, self.Absorption[mlabel], 
+            ax3.plot(self.WL, self.Absorption[mlabel],
                      label=mlabel, linewidth=2)
-        ax3.plot(self.WL, self.Transmission, label="Transmission", linewidth=2)    
+        ax3.plot(self.WL, self.Transmission, label="Transmission", linewidth=2)
         ax3.plot(self.WL, self.Reflection, label="Reflection", linewidth=2)
-        ax3.legend(loc='upper right', fontsize=14).draggable()
-        ax3.set_ylim(ymax=1.0,ymin=0)
+        ax3.legend(loc='upper right', fontsize=14, frameon=False).draggable()
+
+        ax3.set_ylim(ymin = 0, ymax = 1.0)
+        ax3.set_xlim(xmin = self.WL[0], xmax = self.WL[-1])
+
+        plt.tight_layout()
         fig3.show()
 
         if savefig:
             fig3.savefig(savename+".pdf", transparent=True)
-            
+
         return None
 
-    
+
     def PlotGen(self, savename=SaveName, savefig=False):
         """
         Plots generation rate as a function of position in the device
-        """    
-  
+        """
+
         Gx_pos = np.sum(self.Gx,1)
         fig4 = plt.figure("Generation Rate")
         fig4.clf()
         ax4  = fig4.add_subplot(111)
         ax4.set_xlabel('Position (nm)', size=20)
-        ax4.set_ylabel('Generation Rate (1/sec$\cdot$cm$^3$)', 
+        ax4.set_ylabel('Generation Rate (1/sec$\cdot$cm$^3$)',
                        size=20)
         ax4.plot(self.x_pos, Gx_pos, linewidth=2, color="r")
-        
-        fig5 = plt.figure("Absorption Rate")
+
+        fig5 = plt.figure("Photon Absorption Rate")
         fig5.clf()
         ax5  = fig5.add_subplot(111)
         ax5.set_ylabel('Wavelength (nm)', size=20)
         ax5.set_xlabel('Position (nm)', size=20)
         X, Y = np.meshgrid(self.x_pos, self.WL)
-        
+
         ax4.tick_params(labelsize=18)
         ax5.tick_params(labelsize=18)
-        #ax5.contourf(X, Y, self.Gx.T, 50) 
+        #ax5.contourf(X, Y, self.Gx.T, 50)
         CS = ax5.contourf(X, Y, self.Gx.T, 50, vmax=6e19)
         for c in CS.collections: # avoid white gaps when converting to pdf
             c.set_edgecolor("face")
         ax5.tick_params(labelsize=18)
         fig5.colorbar(CS)
-        fig5.suptitle('Photon Absorption Rate (1/sec$\cdot$nm$\cdot$cm$^3$)', 
-                       fontsize=16, fontweight='bold')
-    
+        #fig5.suptitle('Photon Absorption Rate (1/sec$\cdot$nm$\cdot$cm$^3$)',
+        #               fontsize=16, fontweight='bold')
+
         for matind in xrange(2, len(self.layers)+1):
             ax4.axvline(self.t_cumsum[matind-1], color="black")
             ax5.axvline(self.t_cumsum[matind-1], color="black")
             x_text = (self.t_cumsum[matind-2] + self.t_cumsum[matind-1])/2.0
-            ax4.text(x_text, ax4.get_ylim()[1]+0.01, self.layers[matind-1], 
+            ax4.text(x_text, ax4.get_ylim()[1]+0.01, self.layers[matind-1],
                      size=14, va="bottom", ha="center")
-            ax5.text(x_text, ax5.get_ylim()[1]+0.01, self.layers[matind-1], 
+            ax5.text(x_text, ax5.get_ylim()[1]+0.01, self.layers[matind-1],
                      size=14, va="bottom", ha="center")
+        fig4.tight_layout()
+        fig5.tight_layout()
+
         if savefig:
             fig4.savefig(savename+"_Gen_position_.pdf", transparent=True)
             fig5.savefig(savename+"_AbsorptionRate.pdf", transparent=True)
-        
+
         return None
 
 
@@ -460,53 +478,56 @@ class OpticalModeling(object):
         Calculate the transfer matrix I for Reflection and Transmission
         at an interface between two materials.
         mat1, mat2: name of the materials
-        return I, a  numpy array with shape len(self.WL)x2x2 
+        return I, a  numpy array with shape len(self.WL)x2x2
         I[i] is the transfer matrix at wavelength self.WL[i]
-        
+
         I[i] = 1/T[i] *  [ [    1,  R[i] ]
                            [ R[i],     1 ] ]
         """
         n1s, n2s = self.nk[mat1], self.nk[mat2] # complex dielectric constants
         R=(n1s-n2s)/(n1s+n2s)
         T=2.0*n1s/(n1s+n2s)
-        I = np.array([ [[1.0, R[i]],[R[i], 1.0]]/T[i] 
+        I = np.array([ [[1.0, R[i]],[R[i], 1.0]]/T[i]
                        for i in xrange(R.shape[0])])
         return I
 
-        
-    def L_mat(self, matind): 
+
+    def L_mat(self, matind):
         """
         Calculate the propagation matrix L, through a material
         matind: index of the material
         material name : mat = self.layers[matind]
-        thickness     : d   = self.t[matind] 
+        thickness     : d   = self.t[matind]
         complex dielectric constants:  self.nk[mat]
-        
+
         return L, a numpy array with shape len(self.WL)x2x2 array
         L[i] is the propogation matrix at wavelength self.WL[i]
-        
+
         L[i] = [ [ exp(-x*d),        0 ]
                  [         0, exp(-x*d)] ]
-        where x = n*cos(phi)* 2*(pi)/(lambda),  
+        where x = n*cos(phi)* 2*(pi)/(lambda),
         (n:complex, phi:incident angle, here phi= 0
         """
-        
+
         mat, d = self.layers[matind], self.t[matind]  # d: thickness
         x = 2.0*(np.pi)*self.nk[mat]/self.WL
         L = np.array([ [[np.exp((-1j)*x[i]*d), 0], [0 , np.exp(1j*x[i]*d)]]
                         for i in xrange(x.shape[0])])
         return L
-        
 
-if __name__=="__main__": 
 
-    plt.clf()
+
+
+if __name__=="__main__":
+    #plt.clf()
+
     OM = OpticalModeling(Device, WLstep = WLstep, posstep = posstep)
     #OM.RunSim()
     OM.RunSim(plotE, plotAbs, plotGen,
               saveFigE=saveFigE, saveFigAbs=saveFigAbs, saveFigGen=saveFigGen)
+
     Jsc= OM.JscReport()
-    OM.SaveData(SaveName, saveDataE, saveDataAbs, saveDataGen)
+    #OM.SaveData(SaveName, saveDataE, saveDataAbs, saveDataGen)
 
     plt.show()
 
