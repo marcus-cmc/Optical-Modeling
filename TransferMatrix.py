@@ -26,7 +26,7 @@ Device = [
           ("Glass"  , 100),
           ("ITO"    , 145),
           ("ZnO"    , 120),
-          ("PbS",     200),
+          ("PbS",     250),
           ("Au"     , 150)
          ]
 
@@ -43,7 +43,7 @@ plotE = True   # plot E-field vs wavelength
 plotAbs = True # plot absorption vs wavelength
 plotGen = True # plot generation rate and spectral absorption rate
 saveDataE, saveDataAbs, saveDataGen = False, False, False
-saveFigE , saveFigAbs , saveFigGen  = False, False, False
+saveFigE , saveFigAbs , saveFigGen  = True, True, True
 SaveName = "Result"
 
 posstep = 1.0 # step size for thickness
@@ -106,7 +106,7 @@ class OpticalModeling(object):
         return None
 
 
-    def SaveData(self, savename="Resulttest_",
+    def SaveData(self, savename="Results_",
                  saveDataE=False, saveDataAbs=False, saveDataGen=False):
 
         if saveDataE:
@@ -368,8 +368,8 @@ class OpticalModeling(object):
         fig2.tight_layout()
 
         if savefig:
-            fig1.savefig(savename+"_selectedWL.pdf", transparent=True)
-            fig2.savefig(savename+".pdf", transparent=True)
+            fig1.savefig(savename+"_selectedWL.pdf", transparent=False)
+            fig2.savefig(savename+".pdf", transparent=False)
 
         return None
 
@@ -403,7 +403,7 @@ class OpticalModeling(object):
         fig3.show()
 
         if savefig:
-            fig3.savefig(savename+".pdf", transparent=True)
+            fig3.savefig(savename+".pdf", transparent=False)
 
         return None
 
@@ -452,8 +452,8 @@ class OpticalModeling(object):
         fig5.tight_layout()
 
         if savefig:
-            fig4.savefig(savename+"_Gen_position_.pdf", transparent=True)
-            fig5.savefig(savename+"_AbsorptionRate.pdf", transparent=True)
+            fig4.savefig(savename+"_Gen_position_.pdf", transparent=False)
+            fig5.savefig(savename+"_AbsorptionRate.pdf", transparent=False)
 
         return None
 
