@@ -43,7 +43,7 @@ plotE = True   # plot E-field vs wavelength
 plotAbs = True # plot absorption vs wavelength
 plotGen = True # plot generation rate and spectral absorption rate
 saveDataE, saveDataAbs, saveDataGen = False, False, False
-saveFigE , saveFigAbs , saveFigGen  = True, True, True
+saveFigE , saveFigAbs , saveFigGen  = False, False, False
 SaveName = "Result"
 
 posstep = 1.0 # step size for thickness
