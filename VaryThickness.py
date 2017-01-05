@@ -47,10 +47,10 @@ Device = [
 
 
 ##############  vary the thickness of one layer     ##############
-VaryOneLayer = False # vary the thickness of one layer or two layers(False)
-ToVary = 2 # the layer to vary
+VaryOneLayer = True # vary the thickness of one layer or two layers(False)
+ToVary = 3 # the layer to vary
 #t_range = np.arange(100, 601, 10) # start, end (not included), step
-t_range = np.arange(10, 501, 10)
+t_range = np.arange(50, 751, 10)
 #t_range = [ 50,75,125,150,250,300,350] # manually input range
 
 # target: layer of interest (layer index), usually the light absorber.
@@ -63,8 +63,8 @@ target = 3
 ##############  vary the thickness of two layers     ##############
 VaryTwoLayer = not VaryOneLayer # vary the thickness of two layers
 
-ToVary2 = 1
-t2_range = np.arange(10, 201, 10)
+ToVary2 = 3
+t2_range = np.arange(150, 401, 10)
 target2 = None # for tandem only, calculate and plot the Jsc of the tandem
                # cell with absorber target1 and target 2 (min of these)
                # i.e. the current limiting case. Use None for non-tandem device
