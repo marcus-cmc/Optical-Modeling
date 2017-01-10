@@ -1,55 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 24 12:40:50 2015
-
 @author: Marcus
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
 plt.style.use('ggplot')
 
-
-#------------------------------ User input --------------------------------
-
-
-# Device: (Name, thciness) ; thickness in nm
-# Names of layers of materials must match that in the library
-# For example, if the layer is called "Glass",
-# the library should contain a columns called "Glass_n" and "Glass_k"
-# starting from the side where light is incident from
-# The first layer is assumed to be a thick substrate whose thickness is
-# irrelivant. If a thin substrate is used, add "Air" as the first layer
-
-# ----- Mandatary input ------
-Device = [
-          ("Glass"  , 100),
-          ("ITO"    , 145),
-          ("ZnO"    , 120),
-          ("PbS",     250),
-          ("Au"     , 150)
-         ]
-
-libname = "Index_of_Refraction_library.csv"
-Solarfile = "SolarAM15.csv" # Wavelength vs  mW*cm-2*nm-1
-
-wavelength = (350, 1200) # wavelength range (nm) to model
-plotWL = [450, 600, 700, 950] # selective wavelengths for "E vs position"
-
-
-# ----- Optional Input -----
-
-plotE = True   # plot E-field vs wavelength
-plotAbs = True # plot absorption vs wavelength
-plotGen = True # plot generation rate and spectral absorption rate
-saveDataE, saveDataAbs, saveDataGen = False, False, False
-saveFigE , saveFigAbs , saveFigGen  = False, False, False
-SaveName = "Result"
-
-posstep = 1.0 # step size for thickness
-WLstep = 2.0 # wavelength step size (nm)
-
-# ---------------------------- End of  user input ----------------------------
 
 # Constants
 h = 6.626e-34 # Js Planck's constant
@@ -57,72 +16,131 @@ c = 2.998e8   # m/s speed of light
 q = 1.602e-19 # C electric charge
 
 class OpticalModeling(object):
-    def __init__(self, Device=Device, libname=libname, wavelength=wavelength,
-                 WLstep  = 2.0, posstep = 0.5, Solarfile = "SolarAM15.csv"):
-        # layer (materials)
+    def __init__(self, Device, libname, WLrange, WLstep  = 2.0, posstep = 0.5,
+                 plotWL = None, Solarfile = "SolarAM15.csv"):
+
+        """
+        Initialize an OpticalMpdeling instance, load required data,
+        and initialize required attributes
+        """
+        # layers (materials)
         self.layers = [Device[0][0]] + [mat[0] for mat in Device[1:]
                        if float(mat[1]) > 0]
         # thickness; set the thickness of the substrate (first layer) to 0
         self.t = [0] + [mat[1] for mat in Device[1:] if float(mat[1]) > 0]
         self.t_cumsum = np.cumsum(self.t)
         # wavelength
-        self.WL = np.arange(wavelength[0], wavelength[1] + WLstep, WLstep)
+        self.WL = np.arange(WLrange[0], WLrange[1] + WLstep, WLstep)
         self.WLstep = WLstep
         self.posstep = posstep
         #positions to evaluate field
         self.x_pos = np.arange(self.WLstep/2.0, sum(self.t) , self.posstep)
         # material i is in x_pos[x_ind[i-1]:xind[i]]
-        #self.x_ind = self.x_indice(self.x_pos, self.t, self.t_cumsum)
         self.x_ind = self.x_indice()
-        self.AM15 = self.LoadSolar(Solarfile) # load/reshape into desired WL range
+        self.AM15 = self.LoadSolar(Solarfile) # load/reshape into desired WLs
         self.nk = self.Load_nk(libname)
 
-        self.E = None
-        self.Reflection = None
-        self.Transmission = None
-        self.AbsRate = None
-        self.Absorption = None
-        self.Gx = None
-        self.Jsc = None
+        if plotWL == None: # choose 3 WL, gap is a multiple of 50, unless gap=0
+            wlrange = WLrange[1] - WLrange[0]
+            mid = 50 * ((WLrange[1] + WLrange[0])//100)
+            gap = 50 * ((wlrange-50)//150)
+            plotWL = [mid-gap, mid, mid+gap] if gap!=0 else [mid]
+        elif isinstance(plotWL, int) or isinstance(plotWL, float):
+            plotWL = [plotWL]
+        else:
+            plotWL.sort()
+        ### choose valid values only
+        self.plotWL = [w for w in plotWL if self.WL[0] <= w <= self.WL[-1]]
 
-        self.Imats = {} # for calculating transfer matrix
-        self.Lmats = {} # for calculating transfer matrix
+        # dp for calculating transfer matrices (used in CalE() )
+        self.Imats = {}
+        self.Lmats = {}
 
+        """
+        Below are some attributes in the instance. They don't have to be
+        initialzed here, but doing so (setting them to None) makes it somewhat
+        easier to keep track of the attributes
+        """
+
+        #### These will be 2D numpy arrays, row: position; column: wavelength
+        self.E = None # E field
+        self.AbsRate = None  # Absorption rate
+        self.Gx = None # carrier generation rate
+
+        #### These will be 1D numpy arrays, x: position
+        self.Reflection = None # Reflection (%)
+        self.Transmission = None # Transmission (%)
+
+        #### This will be a 2D pandas dataframe,
+        # wavelegths vs absorption (%) for each material
+        self.Absorption = None # Absorption (%)
+
+        self.Jsc = None # 1D array, Max Jsc in each layer
 
 
     def RunSim(self, plotE=True, plotAbs=True, plotGen=True,
-                     saveFigE=False, saveFigAbs=False, saveFigGen=False):
+                     saveFigE=False, saveFigAbs=False, saveFigGen=False,
+                     savename = "Result", figformat = "pdf"):
+        """
+        Run the simulation. This method would complete all the caculation.
+        """
         self.Cal_Imat_Lmats()
         S, Sp, Sdp = self.CalS()
         self.CalE(S, Sp, Sdp)
         self.CalAbs()
         self.CalGen()
+        if saveFigE or saveFigAbs or saveFigGen:
+            path = os.getcwd()
+            outdir = os.path.normpath(path+ os.sep + "Results")
+            if not os.path.exists(outdir):
+                os.makedirs(outdir)
         if plotE:
-            self.PlotE(savefig=saveFigE)
+            self.PlotE(savefig = saveFigE, savename = savename,
+                       figformat = figformat)
         if plotAbs:
-            self.PlotAbs(savefig=saveFigAbs)
+            self.PlotAbs(savefig = saveFigAbs, savename = savename,
+                         figformat = figformat)
         if plotGen:
-            self.PlotGen(savefig=saveFigGen)
+            self.PlotGen(savefig = saveFigGen, savename = savename,
+                         figformat = figformat)
         return None
 
 
-    def SaveData(self, savename="Results_",
-                 saveDataE=False, saveDataAbs=False, saveDataGen=False):
+    def SaveData(self, savename="Result",
+                 saveAbs=True, saveE=False, saveGen=False):
+        """
+        Save the results as .csv file in a sub folder called "Results"
+        default: save absorption only
 
-        if saveDataE:
+        savename: prefix of the file name, default is "Result"
+        saveAbs : save Absorption
+        saveE : save E-field self.E (position vs wavelength)
+        saveGen : save generation profile self.Gx  (position vs wavelength)
+        """
+
+        if saveE or saveAbs or saveGen:
+            path = os.getcwd()
+            outdir = os.path.normpath(path+ os.sep + "Results")
+            if not os.path.exists(outdir):
+                os.makedirs(outdir)
+
+        if saveE:
             df_E = pd.DataFrame(abs(self.E**2))
             df_E.index = self.x_pos
-            df_E.to_csv(savename+"_E.csv", header=self.WL)
-        if saveDataGen:
+            pE = os.path.normpath(outdir + os.sep + savename + "_Efield.csv")
+            df_E.to_csv(path_or_buf = pE, header=self.WL)
+        if saveGen:
             df_Gen = pd.DataFrame(self.Gx)
             df_Gen.index = self.x_pos
-            df_Gen.to_csv(savename+"_Gen.csv", header=self.WL)
-        if saveDataAbs:
+            pG = os.path.normpath(outdir + os.sep + savename + "_Gen.csv")
+            df_Gen.to_csv(path_or_buf = pG, header=self.WL)
+        if saveAbs:
             df_Abs = pd.DataFrame(self.Absorption)
             df_Abs["Transmission"] = self.Transmission
             df_Abs["Reflection"] = self.Reflection
             df_Abs.index = self.WL
-            df_Abs.to_csv(savename+"_Absorption.csv")
+            pA = os.path.normpath(outdir+os.sep + savename + "_Absorption.csv")
+            df_Abs.to_csv(path_or_buf = pA)
 
         return None
 
@@ -135,21 +153,38 @@ class OpticalModeling(object):
 
     def Load_nk(self, libname):
         # load data
-        data=pd.read_csv(libname, header = 0)
+        nk = pd.read_csv(libname, header = 0)
+
+        if 'Wavelength (nm)' not in nk:
+            raise ValueError(
+                  "Library MUST contains a column called 'Wavelength (nm)'")
+        nkWL = nk["Wavelength (nm)"]
+        if self.WL[-1] > max(nkWL) or self.WL[0] < min(nkWL):
+            raise ValueError(
+                  "Input wavelength range is not valid.\n" +
+                  "It should be within the range of the wavelength in the " +
+                  "refraction index library")
+
         # Initialize a dict d_nk  (key, val) = (mater: complex nk)
         # key is the name of the material, val is the complex value of nk
         # (indexing in np array is faster than pandas dataframe)
         d_nk ={}
         d_nk["WL"] = self.WL
         d_nk["Air"] = np.array([1]*len(self.WL))
-        # interp n,k to desired WL range and store them in nk
+        # interp n,k to the desired WL range and store them in nk
         for mater in self.layers:
             if mater not in d_nk:
-                n=np.interp(self.WL, data["Wavelength (nm)"], data[mater+"_n"])
-                k=np.interp(self.WL, data["Wavelength (nm)"], data[mater+"_k"])
+                if mater+"_n" not in nk or mater+"_n" not in nk:
+                    raise ValueError( "Invalid input : \nCan't find the " +
+                    "refraction indices for material '{}'\n".format(mater) +
+                    "The library file must contain the these two columns\n" +
+                    "'{0}_n' and '{0}_k'".format(mater))
+                n = np.interp(self.WL, nk["Wavelength (nm)"], nk[mater+"_n"])
+                k = np.interp(self.WL, nk["Wavelength (nm)"], nk[mater+"_k"])
                 #d_nk[mater] = n + 1j*k
                 d_nk[mater] = np.array([complex(n[i],k[i])
-                                        for i in xrange(len(self.WL))])
+                                            for i in xrange(len(self.WL))])
+
         return d_nk
 
 
@@ -169,10 +204,15 @@ class OpticalModeling(object):
         return x_ind
 
 
-
     def CalE(self, S, S_prime, S_dprime):
-        # Calculate Incoherent power transmission through substrate
-        # T = |4*n1*n2 / (n1+n2)^2| , R = |((n1-n2)/(n1+n2))^2|
+        """
+        Calculate incoherent power transmission through substrate
+        T = |4*n1*n2 / (n1+n2)^2| , R = |((n1-n2)/(n1+n2))^2|
+        It would calculate and update
+        1. The electric field in the device stack (self.E)
+        2. The reflection (self.Reflection)
+        """
+
         subnk = self.nk[self.layers[0]]
 
         T_glass = abs(4*1*subnk / (1+subnk)**2 )
@@ -241,7 +281,6 @@ class OpticalModeling(object):
         layers = self.layers + ["Air"]
 
         # calculate S_prime and S
-
         S = np.array([np.eye(2, dtype=complex) for _ in xrange(nWL)])
         for matind in xrange(1, len(layers)):
             pre, mater =  layers[matind-1], layers[matind]
@@ -261,7 +300,6 @@ class OpticalModeling(object):
             S_dprime[matind] = tmp
 
         return S, S_prime, S_dprime
-
 
 
     def CalAbs(self):
@@ -293,7 +331,7 @@ class OpticalModeling(object):
 
     def CalGen(self):
         """
-        Calculate generation rate as a function of position in the device
+        Calculate generation rates as a function of position in the device
         and calculates Jsc (in mA/cm^2)
         """
         # Energy dissipation mW/cm3-nm at each position and wavelength
@@ -310,13 +348,20 @@ class OpticalModeling(object):
         return None
 
 
-    def PlotE(self, plotWL=plotWL, savename=SaveName+"_Efiled", savefig=False):
+    def PlotE(self, savename = "Result", savefig = False, figformat = 'pdf'):
         """
-        Plots electric field intensity |E|^2 vs position in device for
-        wavelengths specified in the initial array, plotWavelengths.
-        """
-        # E-field, selected wavelength
+        Plot electric field intensity |E|^2 vs position in the device.
+        It would generate 2 plots:
+        1. A contour map of E field vs wavelength vs position
+        2. A E-field vs position plot for the selected wavelengths specified
+           in the input plotWL.
 
+        if savefig is set to True, it would save it in a sub folder 'Results'
+        savename : prefix of the saved figure
+        figformat : the figure format, use 'png' or 'pdf'
+
+        """
+        savename += "_Fig_Efield"
         fig1 = plt.figure("E field for selected WL")
 
         #fig1 = plt.figure(1)
@@ -327,17 +372,16 @@ class OpticalModeling(object):
         ax1.tick_params(labelsize=18)
 
         E2 = abs(self.E**2)
-        for i, w in enumerate(plotWL):
+        for i, w in enumerate(self.plotWL):
             label = "%s nm" % w
-            #xind = min(enumerate(WL), key= lambda x: abs(x[1]-w))[0]
             # find the index closest to the desired wavelength
+            # can use bisect actually
             xind = min(xrange(len(self.WL)), key= lambda x: abs(self.WL[x]-w))
-            #E2 = abs(E[:, xind])**2
-            ax1.plot(self.x_pos, E2[:,xind], label=label, linewidth=2)
+            ax1.plot(self.x_pos, E2[:, xind], label=label, linewidth=2)
         ax1.set_ylim(ymin=0)
 
         # E-field, contour
-        fig2 = plt.figure("E-filed")
+        fig2 = plt.figure("E-field")
         plt.clf()
         ax2  = fig2.add_subplot(111)
         ax2.set_ylabel('Wavelength (nm)', size=20)
@@ -352,7 +396,7 @@ class OpticalModeling(object):
         #fig2.suptitle('Normalized E-field Intensity',
         #               fontsize=20)
 
-        # layer bar
+        # layer bars
         for matind in xrange(2, len(self.layers)+1):
             ax1.axvline(self.t_cumsum[matind-1], color="black")
             ax2.axvline(self.t_cumsum[matind-1], color="black")
@@ -368,58 +412,68 @@ class OpticalModeling(object):
         fig2.tight_layout()
 
         if savefig:
-            fig1.savefig(savename+"_selectedWL.pdf", transparent=False)
-            fig2.savefig(savename+".pdf", transparent=False)
+            outdir = os.path.normpath(os.getcwd() + os.sep + "Results")
+            fname1 = os.path.normpath(
+                     outdir + os.sep + savename + "_selectedWL." + figformat)
+            fname2 = os.path.normpath(
+                     outdir + os.sep + savename + "." + figformat)
+
+            fig1.savefig(fname1, transparent=False)
+            fig2.savefig(fname2, transparent=False)
 
         return None
 
 
-    def PlotAbs(self, savename=SaveName+"_Absorption", savefig=False):
+    def PlotAbs(self, savename="Result", savefig=False, figformat = 'pdf'):
         """
-        Plots normalized intensity absorbed /cm3-nm at each position and
-        wavelength as well as the reflection expected from the device
+        Plot normalized intensity absorbed /cm3-nm at each position and
+        wavelength as well as the reflection and transmission
         """
-
+        savename += "_Fig_Absorption"
         fig3 = plt.figure("Absorption")
         plt.clf()
         ax3  = fig3.add_subplot(111)
-        ax3.set_ylabel('Fraction of Light', size=20)
+        ax3.set_ylabel('Absorption (%)', size=20)
         ax3.set_xlabel('Wavelength (nm)', size=20)
         ax3.tick_params(labelsize=18)
 
         for matind in xrange(1, len(self.t)):
             mater = self.layers[matind]
             mlabel = "L" + str(matind) + "_" + mater
-            ax3.plot(self.WL, self.Absorption[mlabel],
-                     label=mlabel, linewidth=2)
-        ax3.plot(self.WL, self.Transmission, label="Transmission", linewidth=2)
-        ax3.plot(self.WL, self.Reflection, label="Reflection", linewidth=2)
+            ax3.plot(self.WL, 100.0 * self.Absorption[mlabel],
+                     label = mlabel, linewidth = 2)
+        ax3.plot(self.WL, 100.0 * self.Transmission,
+                 label = "Transmission", linewidth = 2)
+        ax3.plot(self.WL, 100.0 * self.Reflection,
+                 label = "Reflection", linewidth = 2)
         ax3.legend(loc='upper right', fontsize=14, frameon=False).draggable()
 
-        ax3.set_ylim(ymin = 0, ymax = 1.0)
+        ax3.set_ylim(ymin = 0, ymax = 100.0)
         ax3.set_xlim(xmin = self.WL[0], xmax = self.WL[-1])
 
         plt.tight_layout()
         fig3.show()
 
         if savefig:
-            fig3.savefig(savename+".pdf", transparent=False)
+            outdir = os.path.normpath(os.getcwd() + os.sep + "Results")
+            fname3 = os.path.normpath(
+                     outdir + os.sep + savename + "." + figformat)
+            fig3.savefig(fname3, transparent=False)
 
         return None
 
 
-    def PlotGen(self, savename=SaveName, savefig=False):
+    def PlotGen(self, savename="Result", savefig=False, figformat = 'pdf'):
         """
-        Plots generation rate as a function of position in the device
+        Plot generation rate as a function of position in the device
         """
-
+        savename += "_Fig"
         Gx_pos = np.sum(self.Gx,1)
         fig4 = plt.figure("Generation Rate")
         fig4.clf()
         ax4  = fig4.add_subplot(111)
         ax4.set_xlabel('Position (nm)', size=20)
-        ax4.set_ylabel('Generation Rate (1/sec$\cdot$cm$^3$)',
-                       size=20)
+        ax4.set_ylabel('Generation Rate (1/sec$\cdot$cm$^3$)', size = 20)
         ax4.plot(self.x_pos, Gx_pos, linewidth=2, color="r")
 
         fig5 = plt.figure("Photon Absorption Rate")
@@ -432,7 +486,7 @@ class OpticalModeling(object):
         ax4.tick_params(labelsize=18)
         ax5.tick_params(labelsize=18)
         #ax5.contourf(X, Y, self.Gx.T, 50)
-        CS = ax5.contourf(X, Y, self.Gx.T, 50, vmax=6e19)
+        CS = ax5.contourf(X, Y, self.Gx.T, 50) #, vmax=6e19)
         for c in CS.collections: # avoid white gaps when converting to pdf
             c.set_edgecolor("face")
         ax5.tick_params(labelsize=18)
@@ -443,7 +497,9 @@ class OpticalModeling(object):
         for matind in xrange(2, len(self.layers)+1):
             ax4.axvline(self.t_cumsum[matind-1], color="black")
             ax5.axvline(self.t_cumsum[matind-1], color="black")
+
             x_text = (self.t_cumsum[matind-2] + self.t_cumsum[matind-1])/2.0
+
             ax4.text(x_text, ax4.get_ylim()[1]+0.01, self.layers[matind-1],
                      size=14, va="bottom", ha="center")
             ax5.text(x_text, ax5.get_ylim()[1]+0.01, self.layers[matind-1],
@@ -452,8 +508,14 @@ class OpticalModeling(object):
         fig5.tight_layout()
 
         if savefig:
-            fig4.savefig(savename+"_Gen_position_.pdf", transparent=False)
-            fig5.savefig(savename+"_AbsorptionRate.pdf", transparent=False)
+            outdir = os.path.normpath(os.getcwd() + os.sep + "Results")
+            fname4 = os.path.normpath(
+                     outdir + os.sep + savename + "_Gen_position_." + figformat)
+            fname5 = os.path.normpath(
+                     outdir + os.sep + savename + "_AbsorptionRate."+ figformat)
+
+            fig4.savefig(fname4, transparent=False)
+            fig5.savefig(fname5, transparent=False)
 
         return None
 
@@ -461,7 +523,7 @@ class OpticalModeling(object):
     def JscReport(self):
         '''
         OM: Optical Modeling object
-        print Jsc report: layer/materials/thickness/Jsc_max(100% IQE)
+        print Jsc report: layer/materials/thickness/Jsc_max(@100% IQE)
         return Jsc report (a pd dataframe)
         '''
         self.JscData = pd.DataFrame()
@@ -469,8 +531,12 @@ class OpticalModeling(object):
         self.JscData["Material"] = self.layers[1:]
         self.JscData["Thickness (nm)"] = self.t[1:]
         self.JscData["Jsc_Max (mA/cm^2)"] = np.round(self.Jsc, 2)
-        print self.JscData.to_string(index=False)
-        return None
+
+        print ("\nSummary of the modeled results between " +
+               "{0:.1f} and {1:.1f} nm\n".format(self.WL[0], self.WL[-1]))
+
+        print self.JscData.to_string(index = False)
+        return self.JscData
 
 
     def I_mat(self, mat1, mat2):
@@ -519,15 +585,24 @@ class OpticalModeling(object):
 
 
 if __name__=="__main__":
-    #plt.clf()
 
-    OM = OpticalModeling(Device, WLstep = WLstep, posstep = posstep)
-    #OM.RunSim()
-    OM.RunSim(plotE, plotAbs, plotGen,
-              saveFigE=saveFigE, saveFigAbs=saveFigAbs, saveFigGen=saveFigGen)
+    Demo = False # set Demo to True to run an example simulation
 
-    Jsc= OM.JscReport()
-    #OM.SaveData(SaveName, saveDataE, saveDataAbs, saveDataGen)
+    if Demo == True:
+        Device = [
+                  ("Glass"  , 100),
+                  ("ITO"    , 145),
+                  ("ZnO"    , 120),
+                  ("PbS",     250),
+                  ("Au"     , 150)
+                 ]
+        libname = "Index_of_Refraction_library_Demo.csv"
+        Solarfile = "SolarAM15.csv"
 
-    plt.show()
+        OM = OpticalModeling(Device, libname = libname,
+                             WLrange = (350, 1200),
+                             plotWL = [450, 600, 700, 950])
+        OM.RunSim()
+        Jsc = OM.JscReport()
+        plt.show()
 
