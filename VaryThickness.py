@@ -33,19 +33,15 @@ class OMVaryThickness(TM):
 
 
 
-    def RunSim(self, plotE=True, plotAbs=True, plotGen=True,
-                     saveFigE=False, saveFigAbs=False, saveFigGen=False):
+    def RunSim(self):
+    #def RunSim(self, plotE=True, plotAbs=True, plotGen=True,
+    #                 saveFigE=False, saveFigAbs=False, saveFigGen=False):
         self.Cal_Imat_Lmats()
         S = self.CalS(L_vary = self.L_vary)
         self.CalE(S, self.S_prime, self.S_dprime)
         self.CalAbs()
         self.CalGen()
-        if plotE:
-            self.PlotE(savefig=saveFigE)
-        if plotAbs:
-            self.PlotAbs(savefig=saveFigAbs)
-        if plotGen:
-            self.PlotGen(savefig=saveFigGen)
+
         return None
 
 
@@ -73,7 +69,7 @@ class OMVaryThickness(TM):
 
         for ti in self.t_range:
             self.set_t_update(L_vary, ti) # update t & related variables
-            self.RunSim(plotE=False, plotAbs=False, plotGen=False)
+            self.RunSim()
             self.varyJsc.append(self.Jsc)
             self.varyAbs.append(self.Absorption)
             self.varyT.append(self.Transmission)

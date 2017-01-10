@@ -16,16 +16,6 @@ plt.style.use('ggplot')
 
 
 #------------------------------ User input --------------------------------
-#Device = [
-#          ("Glass"  , 500), # layer 0
-#          ("ITO"    , 145), # layer 1
-#          ("ZnO"    ,  70), # layer 2
-#          ("PbS"    , 200),
-#          ("Au"     ,   2),
-#          ("ZnO"    ,  70),
-#          ("PbS"    , 800),
-#          ("Au"     , 150)
-#         ]
 
 
 Device = [
@@ -38,10 +28,10 @@ Device = [
 
 
 ##############  vary the thickness of one layer     ##############
-VaryOneLayer = False # vary the thickness of one layer or two layers(False)
+#VaryOneLayer = False # vary the thickness of one layer or two layers(False)
 ToVary = 2 # the layer to vary
 #t_range = np.arange(100, 601, 10) # start, end (not included), step
-t_range = np.arange(20, 501, 20)
+t_range = np.arange(10, 501, 10)
 #t_range = [50, 75, 125, 150, 250, 300, 350] # manually input range
 
 # target: layer of interest (layer index), usually the light absorber.
@@ -52,13 +42,13 @@ target = 3
 
 
 ##############  vary the thickness of two layers     ##############
-VaryTwoLayer = not VaryOneLayer # vary the thickness of two layers
-
-ToVary2= 1
-t2_range = np.arange(50, 300, 50)
-target2 = None # for tandem only, calculate and plot the Jsc of the tandem
-               # cell with absorber target1 and target 2 (min of these)
-               # i.e. the current limiting case. Use None for non-tandem device
+#VaryTwoLayer = not VaryOneLayer # vary the thickness of two layers
+#
+#ToVary2= 1
+#t2_range = np.arange(50, 300, 50)
+#target2 = None # for tandem only, calculate and plot the Jsc of the tandem
+#               # cell with absorber target1 and target 2 (min of these)
+#               # i.e. the current limiting case. Use None for non-tandem device
 #########################################################################
 
 
@@ -66,7 +56,7 @@ libname = "Index_of_Refraction_library_Demo.csv"
 Solarfile = "SolarAM15.csv" # Wavelength vs  mW*cm-2*nm-1
 
 posstep = 1.0 # thickness step size
-WLrange = (350, 1200) # wavelength range (nm)
+WLrange = [350, 1200] # wavelength range (nm)
 WLstep = 2.0 # wavelength step size (nm)
 
 SaveName = "Result"
@@ -84,14 +74,13 @@ if __name__=="__main__":
                          plotWL = None, WLstep = WLstep, posstep = posstep,
                          Solarfile = Solarfile)
 
-
-    if VaryOneLayer:
-        VT.VaryOne(ToVary, t_range, target, toPrint=False,
-                   cbarlegend=cbarlegend)
-    if VaryTwoLayer:
-        VT.VaryTwo(L1=ToVary, t1_range = t_range,
-                   L2=ToVary2, t2_range = t2_range,
-                   target1 = target, target2=target2, toPlot=True,
-                   print1=True, print2=False, interp_countour=interp_countour)
+    VT.VaryOne(ToVary, t_range, target, toPrint=False,
+               cbarlegend=cbarlegend)
     pass
+
+#    if VaryTwoLayer:
+#        VT.VaryTwo(L1=ToVary, t1_range = t_range,
+#                   L2=ToVary2, t2_range = t2_range,
+#                   target1 = target, target2=target2, toPlot=True,
+#                   print1=True, print2=False, interp_countour=interp_countour)
 
