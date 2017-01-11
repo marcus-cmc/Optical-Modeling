@@ -1,5 +1,5 @@
 # Optical-Modeling (Transfer Matrix Method):
-Modeling light propogation in a multi-layer thin-film stack
+Modeling the light propogation in a multi-layer thin-film stack
 
 ##
 ## OpticalModeling class
