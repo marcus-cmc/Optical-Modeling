@@ -71,7 +71,9 @@ Layer No. Material  Thickness (nm)  Jsc_Max (mA/cm^2)
 """
 ```
 #
+===
 
+#
 
 ##
 ## VaryThickness
@@ -95,7 +97,7 @@ In this example, we vary the thickness of the `PbS` layer. The top figure shows 
 <img src="/Example_VaryThickness_Figures/VaryOneLayer_Jsc2.png" width="480" "VaryPbs - PbsJsc">
 
 # 
-#### VaryThickness Example 1
+#### VaryThickness Example 2
 In the second example, we vary the thickness of the `ZnO` layer and see how the properties of the `PbS` layer change with it.
 
 <img src="/Example_VaryThickness_Figures/VaryZnO_targetPbSAbs.png" width="800" "VaryZnO - PbSAbs">
