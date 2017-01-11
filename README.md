@@ -19,11 +19,15 @@ There is a **`RunModeling.py`** file desgined to take user inputs and then run t
 
 ### Examples
 Below are some example output figures for a device stack consisting of these materials at the given thickness (their refraction indices are included in the `Index_of_Refraction_library_Demo.csv` file):
-* Glass (substrate)
-* ITO (145 nm)
-* ZnO (120 nm)
-* PbS (250 nm)
-* Au (150nm)
+
+Material| Thickness| |note|
+|---|---|---|---|
+| Glass| N/A | |substrate|
+| **ITO** | 145 nm | |transparent electrode|
+| **ZnO** | 120 nm | |window layer|
+| **PbS** | 250 nm | |main light absorbing layer|
+| **Au**  | 150 nm | |back electrode|
+
 
 #
 #### Absorption, Transmission, Reflection of each material in the device stack
@@ -78,7 +82,7 @@ Layer No. Material  Thickness (nm)  Jsc_Max (mA/cm^2)
 ##
 ## VaryThickness
 
-The `VaryThickness` object is a subclass of `OpticalModeling`. It adds some features so that you can vary the thickness of **one** or **two** layers in the thin film stack to see how your desired results – either **absorption** (and thus __*Jsc*__) in __'any'__ layer, **transmission, or **reflection**) – respond to the change of thickness.
+The `VaryThickness` object is a subclass of `OpticalModeling`. It adds some features so that you can vary the thickness of **one** or **two** layers in the thin film stack to see how the properties of interest – either **absorption** (and thus __*Jsc*__) in '*any* layer, **transmission**, or **reflection**) – respond to the change of thickness.
 
 
 For example, you can change the thickness of `layer2`, and watch how the following properties changes with respect to it:
@@ -98,7 +102,7 @@ In this example, we vary the thickness of the `PbS` layer. The top figure shows 
 
 # 
 #### VaryThickness Example 2
-In the second example, we vary the thickness of the `ZnO` layer and see how the properties of the `PbS` layer change with it.
+In the second example, we vary the thickness of the `ZnO` layer to see how the properties of the `PbS` layer change with it. As you can see, because of the interference effects in thin films, the absorption of the `PbS` layer is not a monotonic function of the thickness of `ZnO`. It also shows strong wavelength dependence: every wavelength shows a different behavior. This example demostrates the usefulness of the `VaryThickness` object for the design of experiments.
 
 <img src="/Example_VaryThickness_Figures/VaryZnO_targetPbSAbs.png" width="800" "VaryZnO - PbSAbs">
 <img src="/Example_VaryThickness_Figures/VaryZnO_targetPbS_Jsc.png" width="480" "VaryZnO - PbSJsc">
