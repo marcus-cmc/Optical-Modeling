@@ -13,8 +13,12 @@ And the following properties in solar cells under standard AM 1.5 solar irradiat
 * **Charge carrier generation rates** (equivalent to **photon absorption rate**)
 * __*Jsc*__ (short circuit current density, assuming 100 % IQE, i.e. all absorbed photons are converted into charge carriers)
 
+##
+To run the simulation, simply provide a library of the refraction indices of the materials of interest and specify the materials and thickness in the thin film stack in the **`RunModeling.py`** file and the run it. You can get the some out put figures with options to save the data as .csv files and figure in your desired format (such as .pdf vector graphics or .png raster graphics).
+
+
 #
-Below are some examples output figures for a device stack consisting of these materials at the given thickness:
+Below are some example output figures for a device stack consisting of these materials at the given thickness (their refraction indices are included in the `Index_of_Refraction_library_Demo.csv` file):
 * Glass (substrate)
 * ITO (145 nm)
 * ZnO (120 nm)
