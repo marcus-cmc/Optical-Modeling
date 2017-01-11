@@ -86,13 +86,15 @@ This feature would be very helpful for design of experiments. Below are some exa
 #
 #### VaryThickness Example 1
 In this example, we vary the thickness of the `PbS` layer. The top figure shows how the absorption in the `PbS` changes with its own thickness and the bottom one shows how the Jsc changes with it.
-<img src="/Example_VaryThickness_Figures/VaryOneLayer_Abs2.png" width="600" "VaryPbs - PbsAbs">
+
+<img src="/Example_VaryThickness_Figures/VaryOneLayer_Abs2.png" width="800" "VaryPbs - PbsAbs">
 <img src="/Example_VaryThickness_Figures/VaryOneLayer_Jsc2.png" width="480" "VaryPbs - PbsJsc">
 
 # 
 #### VaryThickness Example 1
 In the second example, we vary the thickness of the `ZnO` layer and see how the properties of the `PbS` layer change with it.
-<img src="/Example_VaryThickness_Figures/VaryZnO_targetPbSAbs.png" width="600" "VaryZnO - PbSAbs">
+
+<img src="/Example_VaryThickness_Figures/VaryZnO_targetPbSAbs.png" width="800" "VaryZnO - PbSAbs">
 <img src="/Example_VaryThickness_Figures/VaryZnO_targetPbS_Jsc.png" width="480" "VaryZnO - PbSJsc">
 
 
