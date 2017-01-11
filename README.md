@@ -1,6 +1,7 @@
 # Optical-Modeling (Transfer Matrix Method):
 Modeling light propogation in a multi-layer thin-film stack
 
+##
 ## OpticalModeling class
 The `OpticalModeling` object is designed to model the light propogation in a stack of thin films with different materials at normal incidence. It can be used to calculate the following properties for thin films:
 * **Light absorption** 
@@ -12,7 +13,7 @@ And the following properties in solar cells under standard AM 1.5 solar irradiat
 * **Charge carrier generation rates** (equivalent to **photon absorption rate**)
 * __*Jsc*__ (short circuit current density, assuming 100 % IQE, i.e. all absorbed photons are converted into charge carriers)
 
-
+#
 Below are some examples output figures for a device stack consisting of these materials at the given thickness:
 * Glass (substrate)
 * ITO (145 nm)
@@ -66,8 +67,10 @@ Layer No. Material  Thickness (nm)  Jsc_Max (mA/cm^2)
 """
 ```
 #
-#
-### VaryThickness
+
+
+##
+## VaryThickness
 
 The `VaryThickness` object is a subclass of `OpticalModeling`. It adds some features so that you can vary the thickness of **one** or **two** layers in the thin film stack to see how your desired results – either **absorption** (and thus __*Jsc*__) in __'any'__ layer, **transmission, or **reflection**) – respond to the change of thickness.
 
@@ -76,7 +79,21 @@ For example, you can change the thickness of `layer2`, and watch how the followi
 * **Transmission** of the whole stack
 * **Reflection** of the whole stack
 * **Absorption** in `layer1`, `layer2`, `layer3`...
+
 This feature would be very helpful for design of experiments. Below are some example outputs by using the `VaryThickness` object.
+
+
+#
+#### In this example, we vary the thickness of the `PbS` layer. The top figure shows how the absorption in the `PbS` changes with its own thickness and the bottom one shows how the Jsc changes with it.
+<img src="/Example_VaryThickness_Figures/VaryOneLayer_Abs2.png" width="600" "VaryPbs - PbsAbs">
+<img src="/Example_VaryThickness_Figures/VaryOneLayer_Jsc2.png" width="480" "VaryPbs - PbsJsc">
+
+#
+#### In the second example, we vary the thickness of the `ZnO` layer and see how the properties of the `PbS` layer change with it.
+<img src="/Example_VaryThickness_Figures/VaryZnO_targetPbSAbs.png" width="600" "VaryZnO - PbSAbs">
+<img src="/Example_VaryThickness_Figures/VaryZnO_targetPbS_Jsc.png" width="480" "VaryZnO - PbSJsc">
+
+
 
 
 
