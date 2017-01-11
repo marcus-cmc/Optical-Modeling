@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-@author: Marcus
+@author: C. Marcus Chuang, 2015
 """
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+import bisect
 plt.style.use('ggplot')
 
 
@@ -16,9 +16,8 @@ c = 2.998e8   # m/s speed of light
 q = 1.602e-19 # C electric charge
 
 class OpticalModeling(object):
-    def __init__(self, Device, libname, WLrange, WLstep  = 2.0, posstep = 0.5,
+    def __init__(self, Device, libname, WLrange, WLstep  = 2.0, posstep = 1.0,
                  plotWL = None, Solarfile = "SolarAM15.csv"):
-
         """
         Initialize an OpticalMpdeling instance, load required data,
         and initialize required attributes
@@ -181,9 +180,9 @@ class OpticalModeling(object):
                     "'{0}_n' and '{0}_k'".format(mater))
                 n = np.interp(self.WL, nk["Wavelength (nm)"], nk[mater+"_n"])
                 k = np.interp(self.WL, nk["Wavelength (nm)"], nk[mater+"_k"])
-                #d_nk[mater] = n + 1j*k
-                d_nk[mater] = np.array([complex(n[i],k[i])
-                                            for i in xrange(len(self.WL))])
+                d_nk[mater] = n + 1j*k
+                #d_nk[mater] = np.array([complex(n[i],k[i])
+                #                            for i in xrange(len(self.WL))])
 
         return d_nk
 
@@ -195,13 +194,16 @@ class OpticalModeling(object):
         [x_ind[i-1], xind[i]) in x_pos
         Note: the first layer is glass and is excluded in x_pos
         """
-        x_ind = [len(self.x_pos) for _ in xrange(len(self.t)) ]
-        j = 0
-        for i, x in enumerate(self.x_pos):
-            if x > self.t_cumsum[j]:
-                x_ind[j] = i
-                j += 1
-        return x_ind
+        return [bisect.bisect_right(self.x_pos, self.t_cumsum[i])
+                for i in xrange(len(self.t))]
+#        x_ind = [len(self.x_pos) for _ in xrange(len(self.t)) ]
+#        j = 0
+#        for i, x in enumerate(self.x_pos):
+#            if x > self.t_cumsum[j]:
+#                x_ind[j] = i
+#                j += 1
+#
+#        return x_ind
 
 
     def CalE(self, S, S_prime, S_dprime):
@@ -468,7 +470,7 @@ class OpticalModeling(object):
         Plot generation rate as a function of position in the device
         """
         savename += "_Fig"
-        Gx_pos = np.sum(self.Gx,1)
+        Gx_pos = np.sum(self.Gx, 1)
         fig4 = plt.figure("Generation Rate")
         fig4.clf()
         ax4  = fig4.add_subplot(111)
@@ -476,7 +478,7 @@ class OpticalModeling(object):
         ax4.set_ylabel('Generation Rate (1/sec$\cdot$cm$^3$)', size = 20)
         ax4.plot(self.x_pos, Gx_pos, linewidth=2, color="r")
 
-        fig5 = plt.figure("Photon Absorption Rate")
+        fig5 = plt.figure("Carrier Generation (Photon Absorption) Rate")
         fig5.clf()
         ax5  = fig5.add_subplot(111)
         ax5.set_ylabel('Wavelength (nm)', size=20)
@@ -512,7 +514,8 @@ class OpticalModeling(object):
             fname4 = os.path.normpath(
                      outdir + os.sep + savename + "_Gen_position_." + figformat)
             fname5 = os.path.normpath(
-                     outdir + os.sep + savename + "_AbsorptionRate."+ figformat)
+                     outdir + os.sep + savename +
+                     "_CarrierGeneration(PhotonAbs)Rate."+ figformat)
 
             fig4.savefig(fname4, transparent=False)
             fig5.savefig(fname5, transparent=False)
@@ -586,7 +589,7 @@ class OpticalModeling(object):
 
 if __name__=="__main__":
 
-    Demo = False # set Demo to True to run an example simulation
+    Demo = True # set Demo to True to run an example simulation
 
     if Demo == True:
         Device = [
@@ -598,11 +601,13 @@ if __name__=="__main__":
                  ]
         libname = "Index_of_Refraction_library_Demo.csv"
         Solarfile = "SolarAM15.csv"
-
+        import time
+        t0 = time.time()
         OM = OpticalModeling(Device, libname = libname,
                              WLrange = (350, 1200),
                              plotWL = [450, 600, 700, 950])
         OM.RunSim()
+        print time.time()-t0
         Jsc = OM.JscReport()
         plt.show()
 

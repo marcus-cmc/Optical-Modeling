@@ -32,7 +32,6 @@ class OMVaryThickness(TM):
         return None
 
 
-
     def RunSim(self):
     #def RunSim(self, plotE=True, plotAbs=True, plotGen=True,
     #                 saveFigE=False, saveFigAbs=False, saveFigGen=False):
@@ -153,6 +152,7 @@ class OMVaryThickness(TM):
                          numpoints=1, fontsize=14,
                          title='Thickness of\n ' + self.layers[self.L_vary],
                          borderaxespad=0).draggable()
+            axAbs.get_legend().get_title().set_fontsize(14)
             plt.tight_layout()
 
             figAbs.subplots_adjust(right=0.82)
@@ -300,7 +300,7 @@ class OMVaryThickness(TM):
 
 
 ## To do:
-    def SaveVary(SaveName):
+    def SaveVTData(SaveName):
         return
 
 
