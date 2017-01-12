@@ -4,7 +4,7 @@
 The model is based on a transfer matrix method. The description of the model can be found in the following paper:
 
 L. A. A. Pettersson *et al.*, “Modeling photocurrent action spectra of photovoltaic devices based on organic thin films
-”, J. Appl. Phys. 86, 487 (1999) [[link to the paper]](http://aip.scitation.org/doi/10.1063/1.370757)
+”, *J. Appl. Phys.* **86**, 487-496 (1999) [[link to the paper]](http://aip.scitation.org/doi/10.1063/1.370757)
 
 
 ##
