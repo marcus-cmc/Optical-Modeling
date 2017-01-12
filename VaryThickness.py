@@ -86,12 +86,24 @@ class OMVaryThickness(TM):
 
 
     def PlotVaryJsc(self, target):
+        tmax = len(self.layers)-1
+        errortxt = ("Invalid target index for PlotVaryJsc:\n" +
+                    "Target index should be between 1 and {}".format(tmax))
+        try: # catch wrong input
+            x = float(target)
+            if not int(x) == x or x <= 0 or x > tmax:
+                raise ValueError
+            target = int(x)
+        except:
+            print errortxt
+            return
+
         ftitle = 'Max Jsc in L' + str(target) + ' ' + self.layers[target]
         figJsc = plt.figure(ftitle)
         figJsc.clf()
         axJsc = figJsc.add_subplot(111)
         xlabel = 'Thickness of ' + self.layers[self.L_vary] + ' (nm)'
-        ylabel = 'Jsc' + " (mA/cm$^2$)"
+        ylabel = "Jsc from {} (mA/cm$^2$)".format(self.layers[target], size=22)
         axJsc.set_xlabel(xlabel, size=16)
         axJsc.set_ylabel(ylabel, size=16)
         axJsc.plot(self.t_range, [Jsc[target-1] for Jsc in self.varyJsc],
@@ -103,6 +115,42 @@ class OMVaryThickness(TM):
 
 
     def PlotVaryAbs(self, target, cbarlegend=False):
+        """
+        plot the absorption in the target layer or the total absorption,
+        reflection, or the transmision in the whole device stack
+        target can be one of the followings:
+        (1) index of the layer of interest
+        (2) 'R' or 'reflection' for reflection
+        (3) 'T' or 'transmission' for transmission
+        (4) 'A' or 'Abs' or 'Absorption' for the total absorption
+        """
+
+
+        tmax = len(self.layers)-1
+        errortxt = (
+        "Invalid target for PlotVaryJsc(target): \n" +
+        "'target' should be one of the followings: \n" +
+        "(1) An index between 1 and " +
+             "{0} for the absorption in that layer \n".format(tmax) +
+        "(2) 'R' or 'Reflection' (not case sensitive) for reflection \n" +
+        "(3) 'T' or 'Transmission' (not case sensitive) for transmission \n"+
+        "(4) 'A' or 'Abs' or 'Absorpton' (not case sensitive) for " +
+             "the total absorption (1-R-T) \n" )
+
+        try: # catch wrong input
+            x = float(target)
+            if not int(x) == x or x <= 0 or x > tmax:
+                raise ValueError
+            target = int(x)
+
+        except:
+            valid = {'r', 'reflection', 't', 'transmission', 'a', 'abs',
+                     'absorption'}
+            if not isinstance(target, str) or target.lower() not in valid:
+                print errortxt
+                return
+            target = target.lower()
+
 
         #figAbs = plt.figure('absorption', figsize=(16*0.8, 9*0.8))
         figAbs = plt.figure(figsize=(16*0.8, 9*0.8))
@@ -115,14 +163,14 @@ class OMVaryThickness(TM):
         vmin, vmax = self.t_range[0], self.t_range[-1]
         normalize = mcolors.Normalize(vmin, vmax)
 
-        if target=='R':
+        if target in ['r', 'reflection']:
             axAbs.set_ylabel('Reflection (%)', size=22)
             for ind, t in enumerate(self.t_range):
                 axAbs.plot(self.WL, 100.0*self.varyR[ind],
                            linewidth=2, label = str(t) + " nm",
                            color=cmap(normalize(t)))
 
-        elif target=='A':
+        elif target in ['a', 'abs', 'absorption']:
             axAbs.set_ylabel('Absorption (1-R-T) (%)', size=22)
             for ind, t in enumerate(self.t_range):
                 axAbs.plot(self.WL, 100.0*(1-self.varyR[ind]-self.varyT[ind]),
@@ -130,7 +178,7 @@ class OMVaryThickness(TM):
                            color=cmap(normalize(t)))
 
 
-        elif target=='T':
+        elif target in ['t', 'transmission']:
             axAbs.set_ylabel('Transmission (%)', size=22)
             for ind, t in enumerate(self.t_range):
                 axAbs.plot(self.WL, 100.0*self.varyT[ind],
@@ -138,7 +186,8 @@ class OMVaryThickness(TM):
                            color=cmap(normalize(t)))
         else:
             targethead = self.Absorption.columns[target-1]
-            axAbs.set_ylabel('Modeled Absorption (%)', size=22)
+            axAbs.set_ylabel(
+                'Absorption in {0} (%)'.format(self.layers[target]), size=22)
 
             for ind, t in enumerate(self.t_range):
                 axAbs.plot(self.WL, 100.0*self.varyAbs[ind][targethead],
@@ -308,8 +357,7 @@ if __name__=="__main__":
 #    VT = OMVaryThickness(Device, libname=libname, WLrange=wavelength,
 #                       plotWL = plotWL, WLstep = WLstep, posstep = posstep,
 #                       Solarfile = Solarfile)
-#    if VaryOneLayer:
-#        VT.VaryOne(ToVary, t_range, target, toPrint=False,cbarlegend=cbarlegend)
+#    VT.VaryOne(ToVary, t_range, target, toPrint=False,cbarlegend=cbarlegend)
 #    if VaryTwoLayer:
 #        VT.VaryTwo(L1=ToVary, t1_range = t_range,
 #                   L2=ToVary2, t2_range = t2_range,

@@ -19,7 +19,7 @@ plt.style.use('ggplot')
 
 
 Device = [
-          ("Glass"  ,   0), # layer 0
+          ("Glass"  ,   0), # layer 0, substrate, thickness doesn't mater
           ("ITO"    , 145), # layer 1
           ("ZnO"    , 120), # layer 2
           ("PbS"    , 220),
@@ -31,7 +31,7 @@ Device = [
 #VaryOneLayer = False # vary the thickness of one layer or two layers(False)
 ToVary = 2 # the layer to vary
 #t_range = np.arange(100, 601, 10) # start, end (not included), step
-t_range = np.arange(20, 301, 10)
+t_range = np.arange(20, 501, 25)
 #t_range = [50, 75, 125, 150, 250, 300, 350] # manually input range
 
 # target: layer of interest (layer index), usually the light absorber.
