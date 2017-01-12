@@ -22,7 +22,7 @@ Layer No. | Material| Thickness| |note|
 |1| **ITO** | 145 nm | |transparent electrode|
 |2| **ZnO** | 120 nm | |window layer|
 |3| **PbS** | 250 nm | |main light absorbing layer|
-|4| **Au**  | 150 nm | |back electrode|
+|4| **Au**  | 150 nm | |gold electrode|
 
 
 #
@@ -78,7 +78,7 @@ Layer No. Material  Thickness (nm)  Jsc_Max (mA/cm^2)
 ##
 ## OMVaryThickness
 
-The `OMVaryThickness` object is a subclass of `OpticalModeling`. It adds some features so that you can vary the thickness of **one** or **two** layers in the thin film stack to see how the properties of interest – either **absorption** (and thus __*Jsc*__) in '*any* layer, **transmission**, or **reflection**) – respond to the change of thickness.
+The `OMVaryThickness` object is a subclass of `OpticalModeling`. It adds some features so that you can vary the thickness of **one** or **two** layers in the thin film stack to see how the properties of interest – either **absorption** (and thus __*Jsc*__) in '*any*' layer, **transmission**, or **reflection**) – respond to the change of thickness.
 
 
 For example, you can change the thickness of `layer2`, and watch how the following properties changes with respect to it:
@@ -86,56 +86,80 @@ For example, you can change the thickness of `layer2`, and watch how the followi
 * **Reflection** of the whole stack
 * **Absorption** in `layer1`, `layer2`, `layer3`...
 
-This feature would be very helpful for design of experiments. Below are some example outputs by using the `VaryThickness` object.
+This feature would be very helpful for design of experiments. Below are some example outputs by using the `OMVaryThickness` object.
 
 
 
 #
 ## Examples for OMVaryThickness
-These examples use the same device stack to that in the `example for OpticalModeling`.
-First, we create a `VaryThickness` object `VT` and then call the method `VaryOne()` with the desired parameters to run the simulation:
-```python
-VT = OMVaryThickness(Device, libname="Index_of_Refraction_library_Demo.csv", WLrange=[350, 1200])
-VT.VaryOne(ToVary, t_range, target)
-```
+These examples use the same device stack to that in the example for `OpticalModeling`.
+First create a `VaryThickness` object and then call the method `VaryOne()` with the desired parameters to run the simulation
+
 
 #### OMVaryThickness Example 1
 In this example, we vary the thickness of the **PbS** layer (`ToVary=3`) and set the target to **PbS** itself (`target=3`). 
+```python
+VT1 = OMVaryThickness(Device, libname="Index_of_Refraction_library_Demo.csv", WLrange=[350, 1200])
+VT1.VaryOne(ToVary = 3, t_range = range(50, 601, 10), target = 3)
+```
+
 The top figure shows how the absorption in the PbS changes with its own thickness and the bottom one shows how the Jsc changes with it.
 
 
-<img src="/Example_VaryThickness_Figures/VaryPbS_AbsPbS.png" width="800" "VaryPbs - PbsAbs">
-<img src="/Example_VaryThickness_Figures/VaryPbS_JscPbS.png" width="480" "VaryPbs - PbsJsc">
+<img src="/Example_VaryThickness_Figures/VaryPbS_AbsPbS.png" width="800" >
+<img src="/Example_VaryThickness_Figures/VaryPbS_JscPbS.png" width="480" >
 
 # 
-#### VaryThickness Example 2
-In the second example, we vary the thickness of the **ZnO** layer (`ToVary = 2`)to see how the properties of the **PbS** layer (`target = 3`) change with it. As you can see, because of the interference effects in thin films, the absorption of the **PbS** layer is not a monotonic function of the thickness of **ZnO**. It also shows strong wavelength dependence: every wavelength shows a different behavior. This example demostrates the usefulness of the `OMVaryThickness` object for the design of experiments.
-
-<img src="/Example_VaryThickness_Figures/VaryZnO_AbsPbS.png" width="800" "VaryZnO - PbSAbs">
-<img src="/Example_VaryThickness_Figures/VaryZnO_JscPbS.png" width="480" "VaryZnO - PbSJsc">
-
-Once the simulation has been done, we can generate this plot agian or generate other plots (different `target` layers) without running the simulation again by calling the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods. 
-
-We can call 
+#### OMVaryThickness Example 2
+In the second example, we vary the thickness of the **ZnO** layer (`ToVary = 2`)to see how the properties of the **PbS** layer (`target = 3`) change with it. 
 ```python
-VT.PlotVaryAbs(target = 2) # ZnO layer
+VT2 = OMVaryThickness(Device, libname="Index_of_Refraction_library_Demo.csv", WLrange=[350, 1200])
+VT2.VaryOne(ToVary = 2, t_range = range(20, 551, 10), target = 3)
+```
+As you can see, because of the interference effects in thin films, the absorption of the **PbS** layer is not a monotonic function of the thickness of **ZnO**. It also shows strong wavelength dependence: every wavelength shows a different behavior. This example demostrates the usefulness of the `OMVaryThickness` object for the design of experiments.
+
+<img src="/Example_VaryThickness_Figures/VaryZnO_AbsPbS.png" width="800" >
+<img src="/Example_VaryThickness_Figures/VaryZnO_JscPbS.png" width="480" >
+
+Once the simulation has been done after calling `VaryOne()`, we can just call the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods to generate this plot again or generate other plots (different `target` layers) without running the simulation again. We can call 
+```python
+VT2.PlotVaryAbs(target = 2) # ZnO layer
 ```
 to get the absorption in the ZnO layer, which increases with the thickness of itself:  
-<img src="/Example_VaryThickness_Figures/VaryZnO_AbsZnO.png" width="600" "VaryZnO - PbSJsc">
+
+
+<img src="/Example_VaryThickness_Figures/VaryZnO_AbsZnO.png" width="800">
 
 
 ####
-
+#### 
  
  
-If, instead, we set the target to 1 (ITO layer)
+If, instead, we use target 1 (ITO layer)
 ```python
-VT.PlotVaryAbs(target = 1) # ITO layer
+VT2.PlotVaryAbs(target = 1) # ITO layer
 ```
-we get the absorption of the ITO layer with respect to the thickness of the ZnO layer. (ITO is very transparent to the visible light but it could show strong absorption in the near-infrared (>750nm) ). This figure probably does not provide too much useful information in practical, but I found the inteference pattern very beautiful (science!) -- I intentionally simulated a lot of data points to make the overlap of all curves more interesting. That's why I decided to show it here.
+we get the absorption of the ITO layer with respect to the thickness of the ZnO layer. (ITO is very transparent to the visible light but it could show strong absorption in the near-infrared (>750nm) ). This figure probably does not provide too much useful information in practical, but I found the inteference pattern very beautiful (science!) -- I intentionally simulated a lot of data points to make the overlap of all curves look more interesting. That's why I decided to show it here.
 
-<img src="/Example_VaryThickness_Figures/VaryZnO_AbsITO.png" width="600" "VaryZnO - PbSJsc">
 
+<img src="/Example_VaryThickness_Figures/VaryZnO_AbsITO.png" width="800">
+#### 
+#### 
+#### 
+In addition to the absorption in each layer, we can also use `"T"` to plot the transmision,`"A"` for the total absorption (sum over all layers), and `"R"` for reflection in the device stack with respect to the thickness of the `ToVary` layer.
+```python
+VT2.PlotVaryAbs(target = "T") # Transmission
+VT2.PlotVaryAbs(target = "A") # absorption
+VT2.PlotVaryAbs(target = "R") # Reflection
+```
+The transmission is very low (< 1%) because there is an opaque electrode (150 nm of gold).
+<img src="/Example_VaryThickness_Figures/VaryZnO_T.png" width="800" >
+
+The overall absorption in the device stack
+<img src="/Example_VaryThickness_Figures/VaryZnO_A.png" width="800" >
+
+The reflection of the device: everything not absorbed is reflected back!
+<img src="/Example_VaryThickness_Figures/VaryZnO_R.png" width="800">
 
 
 ### How to Run OpticalModeling
