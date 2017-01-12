@@ -31,26 +31,26 @@ Layer No. | Material| Thickness| |note|
 
 
 #
-####Carrier generation (photon absorption) rate at different wavelengths and position.
+#### Carrier generation (photon absorption) rate at different wavelengths and position.
 
 
 <img src="/Example_OpticalModeling_Figures/Fig_AbsorptionRate.png" width="600" "Carrier generation (photon absorption) rate">
 
 
 #
-####Position vs carrier generation (photon absorption) rate in the device. 
+#### Position vs carrier generation (photon absorption) rate in the device. 
 This is basically the summation of the generation rates over different wavelengths for each position in the figure shown above)
 
 <img src="/Example_OpticalModeling_Figures/Fig_Gen_position_.png" width="600" "Generation rave vs position">
 
 
 #
-####Electric field profile in each material at different wavelengths and position.
+#### Electric field profile in each material at different wavelengths and position.
 <img src="/Example_OpticalModeling_Figures/Fig_Efield.png" width="600" "E-field map">
 
 
 #
-####Position vs electric field in the device at selected wavelengths 
+#### Position vs electric field in the device at selected wavelengths 
 (selected slices of the figure above)
 
 <img src="/Example_OpticalModeling_Figures/Fig_Efield_selectedWL.png" width="600" "E-field selected wl">
@@ -103,11 +103,11 @@ VT1 = OMVaryThickness(Device, libname="Index_of_Refraction_library_Demo.csv", WL
 VT1.VaryOne(ToVary = 3, t_range = range(50, 601, 10), target = 3)
 ```
 
-##### How the absorption in the PbS changes with its own thickness 
+##### The absorption in the PbS vs the thickness of PbS
 
 <img src="/Example_VaryThickness_Figures/VaryPbS_AbsPbS.png" width="800" >
 
-##### How the *Jsc* from PbS changes with the thickness of itself.
+##### The *Jsc* from PbS vs the thickness of PbS.
 
 <img src="/Example_VaryThickness_Figures/VaryPbS_JscPbS.png" width="480" >
 
@@ -120,20 +120,22 @@ VT2.VaryOne(ToVary = 2, t_range = range(20, 551, 10), target = 3)
 ```
 As you can see, because of the interference effects in thin films, the absorption of the **PbS** layer is not a monotonic function of the thickness of **ZnO**. It also shows strong wavelength dependence: every wavelength shows a different behavior. This example demostrates the usefulness of the `OMVaryThickness` object for the design of experiments.
 
+#### Absorption in PbS vs thickness of ZnO
 <img src="/Example_VaryThickness_Figures/VaryZnO_AbsPbS.png" width="800" >
+#### *Jsc* from PbS vs thickness of ZnO
 <img src="/Example_VaryThickness_Figures/VaryZnO_JscPbS.png" width="480" >
 
 
 ####  
-#### change target layer 
 
+**Plot other target layers** 
 Once the simulation has been done after calling `VaryOne()`, we can just call the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods to generate this plot again or generate other plots (different `target` layers) without running the simulation again. We can call 
 ```python
 VT2.PlotVaryAbs(target = 2) # ZnO layer
 ```
 to get the absorption in the ZnO layer, which increases with the thickness of itself:  
 
-
+#### Absorption in ZnO vs thickness of ZnO
 <img src="/Example_VaryThickness_Figures/VaryZnO_AbsZnO.png" width="800">
 
 
@@ -161,13 +163,13 @@ VT2.PlotVaryAbs(target = "T") # Transmission
 VT2.PlotVaryAbs(target = "A") # absorption
 VT2.PlotVaryAbs(target = "R") # Reflection
 ```
-#####The transmission is very low (< 1%) because there is an opaque electrode (150 nm of gold).
+##### The transmission is very low (< 1%) because there is an opaque electrode (150 nm of gold).
 <img src="/Example_VaryThickness_Figures/VaryZnO_T.png" width="800" >
 
-#####The overall absorption in the device stack
+##### The overall absorption in the device stack
 <img src="/Example_VaryThickness_Figures/VaryZnO_A.png" width="800" >
 
-#####The reflection of the device: everything not absorbed is reflected back!
+##### The reflection of the device: everything not absorbed is reflected back!
 <img src="/Example_VaryThickness_Figures/VaryZnO_R.png" width="800">
 
 
