@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Marcus
+@author: C. Marcus Chuang
 """
 
 """
@@ -43,8 +43,8 @@ Device = [
 
 """
 file name of the  refraction index library, must be in the same folder
-The first row in the file is the header, for a material named "Mat1",
-there sould be a "Mat1_n" column, and a "Mat1_k" column.
+The first row in the file is the header, for a material named "Mater1",
+there sould be a "Mater1_n" column, and a "Mater1_k" column.
 The header for the wavelength column ***MUST be*** : "Wavelength (nm)"
 """
 
@@ -126,7 +126,7 @@ if __name__=="__main__":
         OM.Gx  : generation rate (row: position; column: wavelength)
         OM.Jsc : Jsc for each layer (not including the substrate)
 
-    You can re-plot figures again and decide whether to save them,
+    You can re-plot the figures again and decide whether to save them,
     what name and fileformat of the figures you want to save by calling the
     following methods and replace the default variables with what you prefer:
 
@@ -134,7 +134,7 @@ if __name__=="__main__":
         OM.PlotE(  savename="Result", savefig=False, figformat='pdf')
         OM.PlotGen(savename="Result", savefig=False, figformat='pdf')
 
-    To save the simulation results as .csv file, call OM.SaveData() method and
+    To save the simulation data as .csv files, call the OM.SaveData() method and
     replace the default with what you prefer:
          OM.SaveData(savename="Result",
                      saveAbs=True, saveE=False, saveGen=False)
