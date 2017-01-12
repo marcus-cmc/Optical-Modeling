@@ -13,20 +13,16 @@ And the following properties in solar cells under standard AM 1.5 solar irradiat
 * **Charge carrier generation rates** (equivalent to **photon absorption rate**)
 * __*Jsc*__ (short circuit current density, assuming 100 % IQE, i.e. all absorbed photons are converted into charge carriers)
 
-### How to Run OpticalModeling
-There is a **`RunModeling.py`** file desgined to take user inputs and then run the optical modeling based on your inputs. To run the simulation, simply provide a library of the refraction indices of the materials of interest and specify the materials and thickness in the thin film stack in the **`RunModeling.py`** file and the run it. You can get the some output figures with options to save the data as .csv files and figure in your desired format (such as .pdf vector graphics or .png raster graphics). More information on how to run it and how to specify inputs, and how to save data/figures can be found in the comments in the **`RunModeling.py`** file.
-
-
 ### Examples
 Below are some example output figures for a device stack consisting of these materials at the given thickness (their refraction indices are included in the `Index_of_Refraction_library_Demo.csv` file):
 
-Material| Thickness| |note|
-|---|---|---|---|
-| Glass| N/A | |substrate|
-| **ITO** | 145 nm | |transparent electrode|
-| **ZnO** | 120 nm | |window layer|
-| **PbS** | 250 nm | |main light absorbing layer|
-| **Au**  | 150 nm | |back electrode|
+Layer No. | Material| Thickness| |note|
+|---|---|---|---|---|
+|0| Glass| N/A | |substrate|
+|1| **ITO** | 145 nm | |transparent electrode|
+|2| **ZnO** | 120 nm | |window layer|
+|3| **PbS** | 250 nm | |main light absorbing layer|
+|4| **Au**  | 150 nm | |back electrode|
 
 
 #
@@ -80,9 +76,9 @@ Layer No. Material  Thickness (nm)  Jsc_Max (mA/cm^2)
 #
 
 ##
-## VaryThickness
+## OMVaryThickness
 
-The `VaryThickness` object is a subclass of `OpticalModeling`. It adds some features so that you can vary the thickness of **one** or **two** layers in the thin film stack to see how the properties of interest – either **absorption** (and thus __*Jsc*__) in '*any* layer, **transmission**, or **reflection**) – respond to the change of thickness.
+The `OMVaryThickness` object is a subclass of `OpticalModeling`. It adds some features so that you can vary the thickness of **one** or **two** layers in the thin film stack to see how the properties of interest – either **absorption** (and thus __*Jsc*__) in '*any* layer, **transmission**, or **reflection**) – respond to the change of thickness.
 
 
 For example, you can change the thickness of `layer2`, and watch how the following properties changes with respect to it:
@@ -93,12 +89,27 @@ For example, you can change the thickness of `layer2`, and watch how the followi
 This feature would be very helpful for design of experiments. Below are some example outputs by using the `VaryThickness` object.
 
 
-#
-#### VaryThickness Example 1
-In this example, we vary the thickness of the `PbS` layer. The top figure shows how the absorption in the `PbS` changes with its own thickness and the bottom one shows how the Jsc changes with it.
 
-<img src="/Example_VaryThickness_Figures/VaryOneLayer_Abs2.png" width="800" "VaryPbs - PbsAbs">
-<img src="/Example_VaryThickness_Figures/VaryOneLayer_Jsc2.png" width="480" "VaryPbs - PbsJsc">
+#
+## Examples for OMVaryThickness
+These examples use the same device stack to that in the `example for OpticalModeling`.
+First, we create a `VaryThickness` object `VT` and then call the method `VaryOne()` with the desired parameters to run the simulation:
+```python
+VT = OMVaryThickness(Device, libname="Index_of_Refraction_library_Demo.csv", WLrange=[350, 1200])
+VT.VaryOne(ToVary, t_range, target)
+```
+
+#### OMVaryThickness Example 1
+In this example, we vary the thickness of the **PbS** layer (`ToVary=3`) and set the target to **PbS** itself (`target=3`). 
+The top figure shows how the absorption in the PbS changes with its own thickness and the bottom one shows how the Jsc changes with it.
+These plots can also be generated again after the similation is done by calling the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods:
+```python
+VT.PlotVaryAbs(target = 3)
+VT.PlotVaryJsc(target = 3)
+```
+
+<img src="/Example_VaryThickness_Figures/VaryPbS_AbsPbS.png" width="800" "VaryPbs - PbsAbs">
+<img src="/Example_VaryThickness_Figures/VaryPbS_JscPbS.png" width="480" "VaryPbs - PbsJsc">
 
 # 
 #### VaryThickness Example 2
@@ -108,6 +119,12 @@ In the second example, we vary the thickness of the `ZnO` layer to see how the p
 <img src="/Example_VaryThickness_Figures/VaryZnO_targetPbS_Jsc.png" width="480" "VaryZnO - PbSJsc">
 
 
+
+### How to Run OpticalModeling
+There is a **`RunModeling.py`** file desgined to take user inputs and then run the optical modeling based on your inputs. To run the simulation, simply provide a library of the refraction indices of the materials of interest and specify the materials and thickness in the thin film stack in the **`RunModeling.py`** file and the run it. You can get the some output figures with options to save the data as .csv files and figure in your desired format (such as .pdf vector graphics or .png raster graphics). More information on how to run it and how to specify inputs, and how to save data/figures can be found in the comments in the **`RunModeling.py`** file.
+
+### How to Run VaryThickness
+There is a **`RunVaryOneThickness.py`** file desgined to take user inputs and then run the optical modeling based on your inputs.
 
 
 
