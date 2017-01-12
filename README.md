@@ -1,5 +1,11 @@
 # Optical-Modeling :
-Modeling the light propogation in a multi-layer thin-film stack using a Transfer Matrix method.
+#### Modeling the light propogation in a multi-layer thin-film stack.
+
+The model is based on a transfer matrix method. The description of the model can be found in the following paper:
+
+L. A. A. Pettersson *et al.*, “Modeling photocurrent action spectra of photovoltaic devices based on organic thin films
+”, J. Appl. Phys. 86, 487 (1999) [[link to the paper]](http://aip.scitation.org/doi/10.1063/1.370757)
+
 
 ##
 ## OpticalModeling class
