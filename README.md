@@ -1,5 +1,5 @@
 # Optical-Modeling :
-#### Modeling the light propogation in a multi-layer thin-film stack.
+#### Modeling the light propogation, **light absorption**, **transmission**, and **reflection** in a multi-layer thin-film stack.
 
 The model is based on a transfer matrix method, which can be found in the following paper:
 
