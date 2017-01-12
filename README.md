@@ -7,8 +7,8 @@ L. A. A. Pettersson *et al.*, “Modeling photocurrent action spectra of photovo
 ”, *J. Appl. Phys.* **86**, 487-496 (1999) [[link to the paper]](http://aip.scitation.org/doi/10.1063/1.370757)
 
 
-##
-## OpticalModeling class
+## What it does?
+### OpticalModeling class
 The `OpticalModeling` object is designed to model the light propogation in a stack of thin films with different materials at normal incidence. It can be used to calculate the following properties for thin films:
 * **Light absorption** 
 * **Transmission**
