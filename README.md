@@ -102,23 +102,23 @@ VT.VaryOne(ToVary, t_range, target)
 #### OMVaryThickness Example 1
 In this example, we vary the thickness of the **PbS** layer (`ToVary=3`) and set the target to **PbS** itself (`target=3`). 
 The top figure shows how the absorption in the PbS changes with its own thickness and the bottom one shows how the Jsc changes with it.
-These plots can also be generated again after the similation is done by calling the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods:
-```python
-VT.PlotVaryAbs(target = 3)
-VT.PlotVaryJsc(target = 3)
-```
+
 
 <img src="/Example_VaryThickness_Figures/VaryPbS_AbsPbS.png" width="800" "VaryPbs - PbsAbs">
 <img src="/Example_VaryThickness_Figures/VaryPbS_JscPbS.png" width="480" "VaryPbs - PbsJsc">
 
 # 
 #### VaryThickness Example 2
-In the second example, we vary the thickness of the `ZnO` layer to see how the properties of the `PbS` layer change with it. As you can see, because of the interference effects in thin films, the absorption of the `PbS` layer is not a monotonic function of the thickness of `ZnO`. It also shows strong wavelength dependence: every wavelength shows a different behavior. This example demostrates the usefulness of the `VaryThickness` object for the design of experiments.
+In the second example, we vary the thickness of the **ZnO** layer (`ToVary = 2`)to see how the properties of the **PbS** layer (`target = 3`) change with it. As you can see, because of the interference effects in thin films, the absorption of the **PbS** layer is not a monotonic function of the thickness of **ZnO**. It also shows strong wavelength dependence: every wavelength shows a different behavior. This example demostrates the usefulness of the `OMVaryThickness` object for the design of experiments.
 
-<img src="/Example_VaryThickness_Figures/VaryZnO_targetPbSAbs.png" width="800" "VaryZnO - PbSAbs">
-<img src="/Example_VaryThickness_Figures/VaryZnO_targetPbS_Jsc.png" width="480" "VaryZnO - PbSJsc">
+<img src="/Example_VaryThickness_Figures/VaryZnO_AbsPbS.png" width="800" "VaryZnO - PbSAbs">
+<img src="/Example_VaryThickness_Figures/VaryZnO_JScPbS.png" width="480" "VaryZnO - PbSJsc">
 
-
+We can also generat other plots without running the simulation again by calling the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods. 
+```python
+VT.PlotVaryAbs(target = 3)
+VT.PlotVaryJsc(target = 3)
+```
 
 ### How to Run OpticalModeling
 There is a **`RunModeling.py`** file desgined to take user inputs and then run the optical modeling based on your inputs. To run the simulation, simply provide a library of the refraction indices of the materials of interest and specify the materials and thickness in the thin film stack in the **`RunModeling.py`** file and the run it. You can get the some output figures with options to save the data as .csv files and figure in your desired format (such as .pdf vector graphics or .png raster graphics). More information on how to run it and how to specify inputs, and how to save data/figures can be found in the comments in the **`RunModeling.py`** file.
