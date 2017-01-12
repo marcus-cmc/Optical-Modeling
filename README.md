@@ -13,7 +13,7 @@ And the following properties in solar cells under standard AM 1.5 solar irradiat
 * **Charge carrier generation rates** (equivalent to **photon absorption rate**)
 * __*Jsc*__ (short circuit current density, assuming 100 % IQE, i.e. all absorbed photons are converted into charge carriers)
 
-### Examples
+### OpticalModeling Examples
 Below are some example output figures for a device stack consisting of these materials at the given thickness (their refraction indices are included in the `Index_of_Refraction_library_Demo.csv` file):
 
 Layer No. | Material| Thickness| |note|
@@ -96,21 +96,23 @@ These examples use the same device stack to that in the example for `OpticalMode
 First create a `VaryThickness` object and then call the method `VaryOne()` with the desired parameters to run the simulation
 
 
-#### OMVaryThickness Example 1
+### OMVaryThickness Example 1
 In this example, we vary the thickness of the **PbS** layer (`ToVary=3`) and set the target to **PbS** itself (`target=3`). 
 ```python
 VT1 = OMVaryThickness(Device, libname="Index_of_Refraction_library_Demo.csv", WLrange=[350, 1200])
 VT1.VaryOne(ToVary = 3, t_range = range(50, 601, 10), target = 3)
 ```
 
-The top figure shows how the absorption in the PbS changes with its own thickness and the bottom one shows how the Jsc changes with it.
-
+##### How the absorption in the PbS changes with its own thickness 
 
 <img src="/Example_VaryThickness_Figures/VaryPbS_AbsPbS.png" width="800" >
+
+##### How the *Jsc* from PbS changes with the thickness of itself.
+
 <img src="/Example_VaryThickness_Figures/VaryPbS_JscPbS.png" width="480" >
 
 # 
-#### OMVaryThickness Example 2
+### OMVaryThickness Example 2
 In the second example, we vary the thickness of the **ZnO** layer (`ToVary = 2`)to see how the properties of the **PbS** layer (`target = 3`) change with it. 
 ```python
 VT2 = OMVaryThickness(Device, libname="Index_of_Refraction_library_Demo.csv", WLrange=[350, 1200])
@@ -120,6 +122,10 @@ As you can see, because of the interference effects in thin films, the absorptio
 
 <img src="/Example_VaryThickness_Figures/VaryZnO_AbsPbS.png" width="800" >
 <img src="/Example_VaryThickness_Figures/VaryZnO_JscPbS.png" width="480" >
+
+
+####  
+#### change target layer 
 
 Once the simulation has been done after calling `VaryOne()`, we can just call the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods to generate this plot again or generate other plots (different `target` layers) without running the simulation again. We can call 
 ```python
@@ -131,9 +137,9 @@ to get the absorption in the ZnO layer, which increases with the thickness of it
 <img src="/Example_VaryThickness_Figures/VaryZnO_AbsZnO.png" width="800">
 
 
-####
-#### 
- 
+####  
+####  
+####  
  
 If, instead, we use target 1 (ITO layer)
 ```python
@@ -141,24 +147,27 @@ VT2.PlotVaryAbs(target = 1) # ITO layer
 ```
 we get the absorption of the ITO layer with respect to the thickness of the ZnO layer. (ITO is very transparent to the visible light but it could show strong absorption in the near-infrared (>750nm) ). This figure probably does not provide too much useful information in practical, but I found the inteference pattern very beautiful (science!) -- I intentionally simulated a lot of data points to make the overlap of all curves look more interesting. That's why I decided to show it here.
 
-
+#### Absorption in ITO with respect to the thickness of ZnO
 <img src="/Example_VaryThickness_Figures/VaryZnO_AbsITO.png" width="800">
-#### 
-#### 
-#### 
+
+
+
+####   
+####   
+####   
 In addition to the absorption in each layer, we can also use `"T"` to plot the transmision,`"A"` for the total absorption (sum over all layers), and `"R"` for reflection in the device stack with respect to the thickness of the `ToVary` layer.
 ```python
 VT2.PlotVaryAbs(target = "T") # Transmission
 VT2.PlotVaryAbs(target = "A") # absorption
 VT2.PlotVaryAbs(target = "R") # Reflection
 ```
-The transmission is very low (< 1%) because there is an opaque electrode (150 nm of gold).
+#####The transmission is very low (< 1%) because there is an opaque electrode (150 nm of gold).
 <img src="/Example_VaryThickness_Figures/VaryZnO_T.png" width="800" >
 
-The overall absorption in the device stack
+#####The overall absorption in the device stack
 <img src="/Example_VaryThickness_Figures/VaryZnO_A.png" width="800" >
 
-The reflection of the device: everything not absorbed is reflected back!
+#####The reflection of the device: everything not absorbed is reflected back!
 <img src="/Example_VaryThickness_Figures/VaryZnO_R.png" width="800">
 
 
