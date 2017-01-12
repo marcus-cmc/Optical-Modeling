@@ -112,13 +112,31 @@ The top figure shows how the absorption in the PbS changes with its own thicknes
 In the second example, we vary the thickness of the **ZnO** layer (`ToVary = 2`)to see how the properties of the **PbS** layer (`target = 3`) change with it. As you can see, because of the interference effects in thin films, the absorption of the **PbS** layer is not a monotonic function of the thickness of **ZnO**. It also shows strong wavelength dependence: every wavelength shows a different behavior. This example demostrates the usefulness of the `OMVaryThickness` object for the design of experiments.
 
 <img src="/Example_VaryThickness_Figures/VaryZnO_AbsPbS.png" width="800" "VaryZnO - PbSAbs">
-<img src="/Example_VaryThickness_Figures/VaryZnO_JScPbS.png" width="480" "VaryZnO - PbSJsc">
+<img src="/Example_VaryThickness_Figures/VaryZnO_JscPbS.png" width="480" "VaryZnO - PbSJsc">
 
-We can also generat other plots without running the simulation again by calling the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods. 
+Once the simulation has been done, we can generate this plot agian or generate other plots (different `target` layers) without running the simulation again by calling the `PlotVaryAbs(target)` and `PlotVaryJsc(target)` methods. 
+
+We can call 
 ```python
-VT.PlotVaryAbs(target = 3)
-VT.PlotVaryJsc(target = 3)
+VT.PlotVaryAbs(target = 2) # ZnO layer
 ```
+to get the absorption in the ZnO layer, which increases with the thickness of itself:  
+<img src="/Example_VaryThickness_Figures/VaryZnO_AbsZnO.png" width="600" "VaryZnO - PbSJsc">
+
+
+####
+
+ 
+ 
+If, instead, we set the target to 1 (ITO layer)
+```python
+VT.PlotVaryAbs(target = 1) # ITO layer
+```
+we get the absorption of the ITO layer with respect to the thickness of the ZnO layer. (ITO is very transparent to the visible light but it could show strong absorption in the near-infrared (>750nm) ). This figure probably does not provide too much useful information in practical, but I found the inteference pattern very beautiful (science!) -- I intentionally simulated a lot of data points to make the overlap of all curves more interesting. That's why I decided to show it here.
+
+<img src="/Example_VaryThickness_Figures/VaryZnO_AbsITO.png" width="600" "VaryZnO - PbSJsc">
+
+
 
 ### How to Run OpticalModeling
 There is a **`RunModeling.py`** file desgined to take user inputs and then run the optical modeling based on your inputs. To run the simulation, simply provide a library of the refraction indices of the materials of interest and specify the materials and thickness in the thin film stack in the **`RunModeling.py`** file and the run it. You can get the some output figures with options to save the data as .csv files and figure in your desired format (such as .pdf vector graphics or .png raster graphics). More information on how to run it and how to specify inputs, and how to save data/figures can be found in the comments in the **`RunModeling.py`** file.
