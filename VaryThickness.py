@@ -60,7 +60,7 @@ class OMVaryThickness(TM):
         self.varyT = []
         self.varyR = []
         self.L_vary = L_vary
-        self.t_range = t_range
+        self.t_range = sorted(t_range)
         if not isinstance(target, str):
             target = int(target) # in case user input is a float
         else:
@@ -77,7 +77,7 @@ class OMVaryThickness(TM):
                 print "calculating: ", self.layers[L_vary], "=", ti, "nm,"
                 #print self.layers[L_vary], "=", ti, "nm,", "Max Jsc in",
                 #print self.layers[target], "=", np.round(self.Jsc[target-1],2)
-        if PlotJsc and not isinstance(target, str):
+        if PlotJsc :
             self.PlotVaryJsc(target)
         if PlotAbs:
             self.PlotVaryAbs(target, cbarlegend)
@@ -95,7 +95,11 @@ class OMVaryThickness(TM):
                 raise ValueError
             target = int(x)
         except:
-            print errortxt
+            if target.lower() == 'all':
+                for tar in xrange(1, tmax+1):
+                    self.PlotVaryJsc(tar)
+            else:
+                print errortxt
             return
 
         ftitle = 'Max Jsc in L' + str(target) + ' ' + self.layers[target]
@@ -108,6 +112,9 @@ class OMVaryThickness(TM):
         axJsc.set_ylabel(ylabel, size=16)
         axJsc.plot(self.t_range, [Jsc[target-1] for Jsc in self.varyJsc],
                    '-o', linewidth=2, color='r', markersize=8)
+        tmin, tmax = self.t_range[0], self.t_range[-1]
+        mid, width = (tmin + tmax)/2.0, (tmax-tmin)/2
+        axJsc.set_xlim(xmin = max(0, mid - width*1.05), xmax = mid + width*1.05)
         axJsc.tick_params(labelsize=14)
         figJsc.tight_layout()
 
@@ -123,8 +130,8 @@ class OMVaryThickness(TM):
         (2) 'R' or 'reflection' for reflection
         (3) 'T' or 'transmission' for transmission
         (4) 'A' or 'Abs' or 'Absorption' for the total absorption
+        (5) 'all' to plot all figures listed above
         """
-
 
         tmax = len(self.layers)-1
         errortxt = (
@@ -135,7 +142,11 @@ class OMVaryThickness(TM):
         "(2) 'R' or 'Reflection' (not case sensitive) for reflection \n" +
         "(3) 'T' or 'Transmission' (not case sensitive) for transmission \n"+
         "(4) 'A' or 'Abs' or 'Absorpton' (not case sensitive) for " +
-             "the total absorption (1-R-T) \n" )
+             "the total absorption (1-R-T) \n" +
+        "(5) 'all' to plot all figures listed above"     )
+
+        valid = {'r', 'reflection', 't', 'transmission', 'a', 'abs',
+                 'absorption', 'all'}
 
         try: # catch wrong input
             x = float(target)
@@ -144,13 +155,16 @@ class OMVaryThickness(TM):
             target = int(x)
 
         except:
-            valid = {'r', 'reflection', 't', 'transmission', 'a', 'abs',
-                     'absorption'}
             if not isinstance(target, str) or target.lower() not in valid:
                 print errortxt
                 return
             target = target.lower()
 
+        if target == 'all':
+            alltar = range(1, tmax+1) + ['r', 't', 'a']
+            for tar in alltar:
+                self.PlotVaryAbs(tar, cbarlegend=cbarlegend)
+            return
 
         #figAbs = plt.figure('absorption', figsize=(16*0.8, 9*0.8))
         figAbs = plt.figure(figsize=(16*0.8, 9*0.8))
@@ -194,6 +208,7 @@ class OMVaryThickness(TM):
                            linewidth=2, label = str(t) + " nm",
                            color=cmap(normalize(t)))
 
+        #axAbs.set_xlim(xmin = self.WL[0], xmax = self.WL[-1])
         axAbs.tick_params(labelsize=18)
         # use normal legend
         if num_color <= 20 and not cbarlegend:
@@ -201,7 +216,7 @@ class OMVaryThickness(TM):
                          numpoints=1, fontsize=14,
                          title='Thickness of\n ' + self.layers[self.L_vary],
                          borderaxespad=0).draggable()
-            axAbs.get_legend().get_title().set_fontsize(14)
+            axAbs.get_legend().get_title().set_fontsize(16)
             plt.tight_layout()
 
             figAbs.subplots_adjust(right=0.82)
@@ -214,7 +229,7 @@ class OMVaryThickness(TM):
             cblabel = 'Thickness of ' + \
                        self.layers[self.L_vary] + " (nm)"
 
-            cblegend.set_label(cblabel, fontsize=14, labelpad=16)
+            cblegend.set_label(cblabel, fontsize=18, labelpad=16)
             cblegend.ax.tick_params(labelsize=14)
             plt.tight_layout()
 
@@ -239,8 +254,8 @@ class OMVaryThickness(TM):
         return None
         """
         v2Jsc=[]
-        self.L1, self.t1range = L1, t1_range
-        self.L2, self.t2range = L2, t2_range
+        self.L1, self.t1range = L1, sorted(t1_range)
+        self.L2, self.t2range = L2, sorted(t2_range)
         for t1 in self.t1range:
             self.set_t_update(self.L1, t1)
             self.S_prime, self.S_dprime = {}, {}
