@@ -6,7 +6,8 @@ The model is based on a transfer matrix method, which can be found in the follow
 L. A. A. Pettersson *et al.*, “Modeling photocurrent action spectra of photovoltaic devices based on organic thin films
 ”, *J. Appl. Phys.* **86**, 487-496 (1999) [[link to the paper]](http://aip.scitation.org/doi/10.1063/1.370757)
 
-
+# 
+# 
 ## What it does?
 ### OpticalModeling class
 The `OpticalModeling` object is designed to model the light propogation in a stack of thin films with different materials at normal incidence. It can be used to calculate the following properties for thin films:
