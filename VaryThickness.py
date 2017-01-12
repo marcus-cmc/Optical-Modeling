@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-@author: Marcus
+@author: C. Marcus Chuang, 2015
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors

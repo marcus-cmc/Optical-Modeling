@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-@author: C. Marcus Chuang
+@author: C. Marcus Chuang, 2015
 """
+from TransferMatrix import OpticalModeling
+import matplotlib.pyplot as plt
+plt.style.use('ggplot') # or use 'classic' or any in plt.style.available
+
 
 """
 Instruction:
@@ -14,9 +18,7 @@ variables in the 'mandatary user input' section to run.
 
 """
 
-from TransferMatrix import OpticalModeling
-import matplotlib.pyplot as plt
-plt.style.use('ggplot') # or use 'classic' or any in plt.style.available
+
 
 #------------------------ User input ------------------------------------
 

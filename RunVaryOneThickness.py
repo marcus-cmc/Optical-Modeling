@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+@author: C. Marcus Chuang, 2015
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
 from VaryThickness import OMVaryThickness
-
 plt.style.use('ggplot')
 
 
