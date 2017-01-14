@@ -21,7 +21,7 @@ And the following properties in solar cells under standard AM 1.5 solar irradiat
 * __*Jsc*__ (short circuit current density, assuming 100 % IQE, i.e. all absorbed photons are converted into charge carriers)  
 
 #
-### OpticalModeling Examples
+## OpticalModeling Examples
 Below are some example output figures for a device stack consisting of these materials at the given thickness (their refraction indices are included in the `Index_of_Refraction_library_Demo.csv` file):
 
 Layer No. | Material| Thickness| |note|
@@ -32,7 +32,27 @@ Layer No. | Material| Thickness| |note|
 |3| **PbS** | 250 nm | |main light absorbing layer|
 |4| **Au**  | 150 nm | |gold electrode|
 
-
+```python
+""" set up user input """
+# (Name_of_material, thickness_in_nm)
+Device = [
+("Glass" , 100), # layer 0 # thickness of "thick" substrate can be set to an arbitrary number 
+("ITO"   , 145), # layer 1
+("ZnO"   , 120), # layer 2
+("PbS"   , 250),
+("Au"    , 150)
+]
+libname = "Index_of_Refraction_library_Demo.csv"
+Solarfile = "SolarAM15.csv" # Wavelength vs  mW*cm-2*nm-1
+wavelength_range = [350, 1200] # wavelength range (nm) to model [min, max]
+```
+Run the simulation by creating an `OpticalModeling` object and the call the `RunSim` method:
+```python
+# initialize an OpticalModeling obj OM
+OM = OpticalModeling(Device, libname=libname, WLrange=wavelength_range)
+OM.RunSim()
+```
+And then you woul get the following output figures
 #
 #### Absorption, Transmission, Reflection of each material in the device stack
 <img src="/Example_OpticalModeling_Figures/Fig_Absorption.png" width="600" "Absorption">
@@ -59,8 +79,12 @@ This is basically the summation of the generation rates over different wavelengt
 <img src="/Example_OpticalModeling_Figures/Fig_Efield_selectedWL.png" width="600" "E-field selected wl">
 
 #
-Finally, the code would print out a brief summary that looks like this in the console :
+Finally, by calling `JscReport()` method, 
 
+```python
+OM.JscReport() # print and return a summary report
+```
+it would print out a brief summary that looks like this in the console :
 ```python
 """
 Summary of the modeled results between 350.0 and 1200.0 nm
