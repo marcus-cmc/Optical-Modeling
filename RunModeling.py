@@ -2,10 +2,11 @@
 """
 @author: C. Marcus Chuang, 2015
 """
+
 from TransferMatrix import OpticalModeling
 import matplotlib.pyplot as plt
+k = 1.38064852e-23  #    m^2 kg s^-2 K^-1, Boltzmi constant
 plt.style.use('ggplot') # or use 'classic' or any in plt.style.available
-
 
 """
 Instruction:
