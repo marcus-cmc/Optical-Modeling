@@ -5,8 +5,7 @@
 
 from TransferMatrix import OpticalModeling
 import matplotlib.pyplot as plt
-k = 1.38064852e-23  #    m^2 kg s^-2 K^-1, Boltzmi constant
-plt.style.use('ggplot') # or use 'classic' or any in plt.style.available
+plt.style.use('ggplot')  # or use 'classic' or any in plt.style.available
 
 """
 Instruction:
@@ -19,11 +18,9 @@ variables in the 'mandatary user input' section to run.
 
 """
 
+# ------------------------ User input ------------------------------------
 
-
-#------------------------ User input ------------------------------------
-
-#------------------- Mandatary user input -------------------------------
+# ------------------- Mandatary user input -------------------------------
 """
 Device: (Name, thciness) ; thickness in nm
 *** Names of layers of materials must match that in the library ***
@@ -55,65 +52,65 @@ libname = "Index_of_Refraction_library_Demo.csv"
 
 # file name of the AM1.5 solar spectra, already in the folder
 # change it ONLY if you want to use your own file
-Solarfile = "SolarAM15.csv" # Wavelength vs  mW*cm-2*nm-1
+Solarfile = "SolarAM15.csv"  # Wavelength vs  mW*cm-2*nm-1
 
-wavelength_range = [350, 1200] # wavelength range (nm) to model [min, max]
+wavelength_range = [350, 1200]  # wavelength range (nm) to model [min, max]
 
-#------------------- End of Mandatary input -------------------------------
+# ------------------- End of Mandatary input -------------------------------
 
 
 
 
 # Below are the optioanl input ------
 
-posstep = 0.5 # step size for thickness, must be smaller than the thinnest layer
-WLstep = 2.0 # wavelength step size (nm)
+posstep = 1.0  # step size for thickness, must be <= the thinnest layer
+WLstep = 2.0  # wavelength step size (nm)
 
 # selected wavelengths for "E vs position plot",
 # can be several values or a single value,
-# if set to None or not provided, it would automatically calculate 1 or 3 values
+# if set to None or not provided, automatically select 1 or 3 values
 # with gap of a multiple of 50 nm
 plotWL = [450, 600, 700, 950]
 
 plotE = True   # whehter to plot E-field vs wavelength
-plotAbs = True # whether to plot absorption vs wavelength
-plotGen = True # whether to plot generation rate and spectral absorption rate
+plotAbs = True  # whether to plot absorption vs wavelength
+plotGen = True  # whether to plot generation rate and spectral absorption rate
 
-SaveName = "Result" # prefix of the file names
+SaveName = "Result"  # prefix of the file names
 # whether to save the data as csv files
 saveDataE, saveDataAbs, saveDataGen = False, False, False
 # wherther to save the figures
 # default format is vector graphic 'pdf' (with non-transparent background)
 # can also use 'png', 'jpg' or someother format matplotlib supports
 figformat = 'pdf'
-saveFigE , saveFigAbs , saveFigGen  = False, False, False
+saveFigE, saveFigAbs, saveFigGen = False, False, False
 
-#------------------- End of user input -------------------------------
+# ------------------- End of user input -------------------------------
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
-    #### --------------- run with Mandatary input only --------
-    ## initialize an OpticalModeling obj OM
+    # ### --------------- run with Mandatary input only --------
+    # initialize an OpticalModeling obj OM
     #OM = OpticalModeling(Device, libname=libname, WLrange=wavelength_range)
-    ## do all the caculation
+    # do all the caculation
     #OM.RunSim()
-    #### ---------------------------------------------------------------------
+    # ## ---------------------------------------------------------------------
 
 
-    #### --------------- run with all the user input  --------
+    # ### --------------- run with all the user input  --------
     # initialize an OpticalModeling obj OM
     OM = OpticalModeling(Device, libname=libname, WLrange=wavelength_range,
                          plotWL=plotWL, WLstep=WLstep, posstep=posstep)
     OM.RunSim(plotE=plotE, plotAbs=plotAbs, plotGen=plotGen,
               saveFigE=saveFigE, saveFigAbs=saveFigAbs, saveFigGen=saveFigGen,
               figformat='pdf', savename=SaveName)
-    ####----------------------------------------------------------------------
+    # ###----------------------------------------------------------------------
 
     plt.show()
 
-    summary = OM.JscReport() # print and return a summary report
-    ### save data as csv or not
+    summary = OM.JscReport()  # print and return a summary report
+    # ## save data as csv or not
     OM.SaveData(savename=SaveName,
                 saveE=saveDataE, saveAbs=saveDataAbs, saveGen=saveDataGen)
 
@@ -137,8 +134,8 @@ if __name__=="__main__":
         OM.PlotE(  savename="Result", savefig=False, figformat='pdf')
         OM.PlotGen(savename="Result", savefig=False, figformat='pdf')
 
-    To save the simulation data as .csv files, call the OM.SaveData() method and
-    replace the default with what you prefer:
+    To save the simulation data as .csv files, call the OM.SaveData() method
+    and replace the default with what you prefer:
          OM.SaveData(savename="Result",
                      saveAbs=True, saveE=False, saveGen=False)
     """

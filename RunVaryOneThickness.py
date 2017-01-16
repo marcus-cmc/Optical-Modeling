@@ -19,7 +19,6 @@ plt.style.use('ggplot')
 
 #------------------------------ User input --------------------------------
 
-
 Device = [
           ("Glass"  ,   0), # layer 0, substrate, thickness doesn't mater
           ("ITO"    , 145), # layer 1
@@ -30,8 +29,8 @@ Device = [
 
 
 ##############  vary the thickness of one layer     ##############
-#VaryOneLayer = False # vary the thickness of one layer or two layers(False)
-ToVary = 3 # the layer to vary
+#VaryOneLayer = False  # vary the thickness of one layer or two layers(False)
+ToVary = 3  # the layer to vary
 #t_range = np.arange(100, 601, 10) # start, end (not included), step
 t_range = np.arange(50, 351, 10)
 #t_range = [50, 75, 125, 150, 250, 300, 350] # manually input range
@@ -56,31 +55,31 @@ target = 3
 
 
 libname = "Index_of_Refraction_library_Demo.csv"
-Solarfile = "SolarAM15.csv" # Wavelength vs  mW*cm-2*nm-1
+Solarfile = "SolarAM15.csv"  # Wavelength vs  mW*cm-2*nm-1
 
-posstep = 1.0 # thickness step size
-WLrange = [350, 1200] # wavelength range (nm)
-WLstep = 2.0 # wavelength step size (nm)
+posstep = 1.0  # thickness step size
+WLrange = [350, 1200]  # wavelength range (nm)
+WLstep = 2.0  # wavelength step size (nm)
 
 SaveName = "Result"
 
-cbarlegend = True # colorbar as legend for the "thickness vs Abs" plot
+cbarlegend = True  # colorbar as legend for the "thickness vs Abs" plot
                    # but if there are >25 curves, colorbar will be used
 
-interp_countour = True # True : Contour plot (interplate data)
+interp_countour = True  # True : Contour plot (interplate data)
                         # False: Heatmap (no interp)
 #########################################################################
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     plt.close('all')
     VT = OMVaryThickness(Device, libname=libname, WLrange=WLrange,
-                         plotWL = None, WLstep = WLstep, posstep = posstep,
-                         Solarfile = Solarfile)
+                         plotWL=None, WLstep=WLstep, posstep=posstep,
+                         Solarfile=Solarfile)
 
     VT.VaryOne(ToVary, t_range, target, toPrint=False,
                cbarlegend=cbarlegend)
-
+    plt.show()
     pass
 
 #    if VaryTwoLayer:
