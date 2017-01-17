@@ -452,7 +452,6 @@ class OpticalModeling(object):
         ax3.set_xlim(xmin=self.WL[0], xmax=self.WL[-1])
 
         plt.tight_layout()
-        fig3.show()
 
         if savefig:
             outdir = os.path.normpath(os.getcwd() + os.sep + "Results")
