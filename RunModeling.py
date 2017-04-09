@@ -6,6 +6,7 @@
 from TransferMatrix import OpticalModeling
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')  # or use 'classic' or any in plt.style.available
+# plt.ion()
 
 """
 Instruction:
@@ -40,6 +41,7 @@ Device = [
           ("PbS"    , 250),
           ("Au"     , 150)
          ]
+
 
 """
 file name of the  refraction index library, must be in the same folder
