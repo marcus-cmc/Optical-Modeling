@@ -56,6 +56,8 @@ And then you woul get the following output figures
 #
 #### Absorption, Transmission, Reflection of each material in the device stack
 <img src="/Example_OpticalModeling_Figures/Fig_Absorption.png" width="600" >
+
+
 #
 #### Carrier generation (photon absorption) rate at different wavelengths and position.
 
