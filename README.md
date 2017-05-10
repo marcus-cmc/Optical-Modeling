@@ -55,28 +55,28 @@ OM.RunSim()
 And then you woul get the following output figures
 #
 #### Absorption, Transmission, Reflection of each material in the device stack
-<img src="/Example_OpticalModeling_Figures/Fig_Absorption.png" width="600" "Absorption">
+<img src="/Example_OpticalModeling_Figures/Fig_Absorption.png" width="600" >
 #
 #### Carrier generation (photon absorption) rate at different wavelengths and position.
 
 
-<img src="/Example_OpticalModeling_Figures/Fig_AbsorptionRate.png" width="600" "Carrier generation (photon absorption) rate">
+<img src="/Example_OpticalModeling_Figures/Fig_AbsorptionRate.png" width="600" >
 
 #
 #### Position vs carrier generation (photon absorption) rate in the device. 
 This is basically the summation of the generation rates over different wavelengths for each position in the figure shown above)
 
-<img src="/Example_OpticalModeling_Figures/Fig_Gen_position_.png" width="600" "Generation rave vs position">
+<img src="/Example_OpticalModeling_Figures/Fig_Gen_position_.png" width="600">
 
 #
 #### Electric field profile in each material at different wavelengths and position.
-<img src="/Example_OpticalModeling_Figures/Fig_Efield.png" width="600" "E-field map">
+<img src="/Example_OpticalModeling_Figures/Fig_Efield.png" width="600" >
 
 #
 #### Position vs electric field in the device at selected wavelengths 
 (selected slices of the figure above)
 
-<img src="/Example_OpticalModeling_Figures/Fig_Efield_selectedWL.png" width="600" "E-field selected wl">
+<img src="/Example_OpticalModeling_Figures/Fig_Efield_selectedWL.png" width="600" >
 
 #
 Finally, by calling `JscReport()` method, 
