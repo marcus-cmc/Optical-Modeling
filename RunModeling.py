@@ -94,9 +94,9 @@ if __name__ == "__main__":
 
     # ### --------------- run with Mandatary input only --------
     # initialize an OpticalModeling obj OM
-    #OM = OpticalModeling(Device, libname=libname, WLrange=wavelength_range)
+    # OM = OpticalModeling(Device, libname=libname, WLrange=wavelength_range)
     # do all the caculation
-    #OM.RunSim()
+    # OM.RunSim()
     # ## ---------------------------------------------------------------------
 
 
@@ -141,5 +141,4 @@ if __name__ == "__main__":
          OM.SaveData(savename="Result",
                      saveAbs=True, saveE=False, saveGen=False)
     """
-
 

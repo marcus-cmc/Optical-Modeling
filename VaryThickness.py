@@ -72,10 +72,10 @@ class OMVaryThickness(TM):
             self.varyT.append(self.Transmission)
             self.varyR.append(self.Reflection)
             if toPrint:
-                print "calculating: ", self.layers[L_vary], "=", ti, "nm,"
-                # print self.layers[L_vary], "=", ti, "nm,", "Max Jsc in",
-                # print self.layers[target], "=",
-                # print np.round(self.Jsc[target - 1], 2)
+                # print("calculating: ", self.layers[L_vary], "=", ti, "nm,")
+                print("calculating: {layer} = {ti} nm".format(
+                      layer=self.layers[L_vary], ti=ti))
+
         if PlotJsc:
             self.PlotVaryJsc(target)
         if PlotAbs:
@@ -94,10 +94,10 @@ class OMVaryThickness(TM):
             target = int(x)
         except:
             if target.lower() == 'all':
-                for tar in xrange(1, tmax + 1):
+                for tar in range(1, tmax + 1):
                     self.PlotVaryJsc(tar)
             else:
-                print errortxt
+                print(errortxt)
             return
 
         ftitle = 'Max Jsc in L' + str(target) + ' ' + self.layers[target]
@@ -154,7 +154,7 @@ class OMVaryThickness(TM):
 
         except:
             if not isinstance(target, str) or target.lower() not in valid:
-                print errortxt
+                print(errortxt)
                 return
             target = target.lower()
 
@@ -164,8 +164,8 @@ class OMVaryThickness(TM):
                 self.PlotVaryAbs(tar, cbarlegend=cbarlegend)
             return
 
-        # figAbs = plt.figure('absorption', figsize=(16*0.8, 9*0.8))
-        figAbs = plt.figure(figsize=(16 * 0.8, 9 * 0.8))
+        figAbs = plt.figure('absorption', figsize=(16*0.8, 9*0.8))
+        # figAbs = plt.figure()
         figAbs.clf()
         axAbs = figAbs.add_subplot(111)
         axAbs.set_xlabel('Wavelength (nm)', size=22)
@@ -207,6 +207,7 @@ class OMVaryThickness(TM):
                            color=cmap(normalize(t)))
 
         # axAbs.set_xlim(xmin = self.WL[0], xmax = self.WL[-1])
+        axAbs.set_ylim(ymin = 0)
         axAbs.tick_params(labelsize=18)
         # use normal legend
         if num_color <= 20 and not cbarlegend:
@@ -256,8 +257,10 @@ class OMVaryThickness(TM):
             self.set_t_update(self.L1, t1)
             self.S_prime, self.S_dprime = {}, {}
             if print1:
-                print "Calculating: ", self.layers[L1], "=", t1, "nm,",
-                print "Varying ", self.layers[L2]
+                print("Calculating: {L1} = {t1} nm, Varying {L2}".format(
+                      L1=self.layers[L1], t1=t1, L2=self.layers[L2]))
+                # print("Calculating: ", self.layers[L1], "=", t1, "nm,",
+                #       "Varying ", self.layers[L2])
             self.VaryOne(self.L2, self.t2range, target1, toPrint=print2,
                          PlotJsc=False, PlotAbs=False)
             v2Jsc.append(self.varyJsc)
@@ -273,7 +276,7 @@ class OMVaryThickness(TM):
             p, q = len(self.t1range), len(self.t2range)
             Jsc = self.v2Jsc
             J = np.array([[min(Jsc[i][j][target1 - 1], Jsc[i][j][target2 - 1])
-                           for i in xrange(p)] for j in xrange(q)])
+                           for i in range(p)] for j in range(q)])
 
             V2title = ("Max Jsc in the device\n (min of L{0} {1} and L{2} {3})"
                        ).format(target1, self.layers[target1],
@@ -318,6 +321,7 @@ class OMVaryThickness(TM):
 
         '''
 
+
         j = L_vary
         Imats, Lmats = self.Imats, self.Lmats
         nWL = len(self.WL)
@@ -326,15 +330,16 @@ class OMVaryThickness(TM):
         layers = self.layers + ["Air"]
 
         # calculate S_prime and S
-
         if j in S_prime:
             S = np.copy(S_prime[j])
         else:
-            S = np.array([np.eye(2, dtype=complex) for _ in xrange(nWL)])
+            S = np.array([np.eye(2, dtype=complex) for _ in range(nWL)])
             j = 0
-        for matind in xrange(j + 1, len(layers)):
+
+        for matind in range(j+1, len(layers)):
+        # for matind in range(j + 1, len(layers)):
             pre, mater = layers[matind - 1], layers[matind]
-            for i in xrange(nWL):
+            for i in range(nWL):
                 S[i] = S[i].dot(Lmats[matind - 1][i])
                 S[i] = S[i].dot(Imats[(pre, mater)][i])
             S_prime[matind] = np.copy(S)
@@ -342,11 +347,11 @@ class OMVaryThickness(TM):
         S_dprime[len(layers) - 2] = Imats[(layers[-2], layers[-1])]
 
         endind = len(layers) - 3 if j == 0 else j - 1
-        # for matind in xrange(len(layers)-3, 0, -1):
-        for matind in xrange(endind, 0, -1):
+        # for matind in range(len(layers)-3, 0, -1):
+        for matind in range(endind, 0, -1):
             mater, nex = layers[matind], layers[matind + 1]
             tmp = np.copy(S_dprime[matind + 1])
-            for i in xrange(nWL):
+            for i in range(nWL):
                 tmp[i] = np.dot(Lmats[matind + 1][i], tmp[i])
                 tmp[i] = np.dot(Imats[(mater, nex)][i], tmp[i])
             S_dprime[matind] = tmp
@@ -362,17 +367,18 @@ if __name__ == "__main__":
 
     demo = True
     if demo:
+
         Device = [("Glass", 0),
                   ("ITO", 145),
                   ("ZnO", 120),
                   ("PbS", 250),
-                  ("Au", 150)]
+                  ("Au" , 150)]
 
         libname = "Index_of_Refraction_library_Demo.csv"
         WLrange = [350, 1200]
-        ToVary = 3
+        ToVary = 2
         target = 3
-        t_range = np.arange(50, 400, 20)
+        t_range = np.arange(50, 601, 50)
         VT = OMVaryThickness(Device, libname=libname, WLrange=WLrange)
         VT.VaryOne(ToVary, t_range, target, cbarlegend=True)
         plt.show()
